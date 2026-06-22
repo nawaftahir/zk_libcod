@@ -169,6 +169,7 @@ scr_function_t scriptFunctions[] =
 	{"getMovers", gsc_level_getmovers, 0},
 	{"getNumberOfStaticModels", gsc_level_getnumberofstaticmodels, 0},
 	{"getPVS", gsc_level_getpvs, 0},
+	{"getPlayersInRange", gsc_level_getplayersinrange, 0},
 	{"getSavePersist", gsc_level_getsavepersist, 0},
 	{"getStaticModelName", gsc_level_getstaticmodelname, 0},
 	{"getStaticModelOrigin", gsc_level_getstaticmodelorigin, 0},
