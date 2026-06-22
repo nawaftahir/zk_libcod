@@ -356,6 +356,95 @@ void gsc_level_getclosestplayerinrange()
 		stackPushUndefined();
 }
 
+void gsc_level_getplayersbyvieworigininrange()
+{
+	int args = Scr_GetNumParam();
+
+	if ( args < 1 || Scr_GetType(0) != VAR_VECTOR )
+	{
+		stackError("gsc_level_getplayersbyvieworigininrange() requires origin (vector)");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t origin;
+	Scr_GetVector(0, origin);
+
+	float maxDistSq = 0.0f;
+	bool hasMaxDist = false;
+	if ( args > 1 && Scr_GetType(1) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(1) != VAR_FLOAT && Scr_GetType(1) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getplayersbyvieworigininrange() maxDistSq must be a number");
+			stackPushUndefined();
+			return;
+		}
+		maxDistSq = Scr_GetFloat(1);
+		if ( maxDistSq < 0.0f )
+		{
+			stackError("gsc_level_getplayersbyvieworigininrange() maxDistSq must be >= 0");
+			stackPushUndefined();
+			return;
+		}
+		hasMaxDist = true;
+	}
+
+	int filterTeam = -1;
+	if ( args > 2 && Scr_GetType(2) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(2) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getplayersbyvieworigininrange() filterTeam must be an int");
+			stackPushUndefined();
+			return;
+		}
+		filterTeam = Scr_GetInt(2);
+	}
+
+	int traceContentMask = 0;
+	bool hasTraceCheck = false;
+	if ( args > 3 && Scr_GetType(3) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(3) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getplayersbyvieworigininrange() traceContentMask must be an int");
+			stackPushUndefined();
+			return;
+		}
+		traceContentMask = Scr_GetInt(3);
+		hasTraceCheck = true;
+	}
+
+	int maxClients = sv_maxclients->current.integer;
+
+	stackPushArray();
+	for ( int i = 0; i < maxClients; i++ )
+	{
+		gentity_t *ent = &g_entities[i];
+		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
+			continue;
+
+		vec3_t viewOrigin;
+		G_GetPlayerViewOrigin(ent, viewOrigin);
+
+		float dx = viewOrigin[0] - origin[0];
+		float dy = viewOrigin[1] - origin[1];
+		float dz = viewOrigin[2] - origin[2];
+		float d2 = dx * dx + dy * dy + dz * dz;
+		if ( hasMaxDist && d2 > maxDistSq )
+			continue;
+
+		if ( hasTraceCheck && !G_LocationalTracePassed(origin, viewOrigin, ent->s.number, traceContentMask) )
+			continue;
+
+		stackPushEntity(ent);
+		stackPushArrayLast();
+	}
+}
+
 void gsc_level_getplayersinrange()
 {
 	int args = Scr_GetNumParam();
