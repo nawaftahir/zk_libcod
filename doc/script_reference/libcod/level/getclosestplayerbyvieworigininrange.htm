@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>getClosestPlayerByViewOriginInRange( &lt;origin&gt;, [maxDistSq], [filterTeam], [traceContentMask] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Level<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Returns the closest alive, playing client to origin, measured from each player's view origin (eye position via G_GetPlayerViewOrigin). Returns undefined if no client matches.</p>
+<p>Use this for perception-style queries where the eye, not the body, is the meaningful reference. Combined with traceContentMask, a single call yields the closest LOS-visible enemy within range.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+my_eye     = self getViewOrigin();
+enemy_team = 1; // axis if I'm allies
+mask       = 524545; // MASK_OPAQUE: solid + glass + slime
+
+// Closest LOS-visible enemy from my eye, within squared view distance
+target = getClosestPlayerByViewOriginInRange(my_eye, 2200 * 2200, enemy_team, mask);
+if (isDefined(target))
+    self.bot_enemy = target;
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;origin&gt; World-space query point. Usually the caller's view origin.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>2 : &lt;maxDistSq&gt; Squared distance cap. Pass undefined for unlimited range.</LI>
+<LI>3 : &lt;filterTeam&gt; Only clients on this team. 0=FREE, 1=AXIS, 2=ALLIES, 3=SPECTATOR. Pass undefined or a negative integer for any team.</LI>
+<LI>4 : &lt;traceContentMask&gt; If set, runs a locational trace from origin to each candidate's view origin with this mask before counting it. Use to require line of sight.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>Closest matching player entity, or undefined if no client matches.</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

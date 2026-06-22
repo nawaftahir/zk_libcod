@@ -165,6 +165,7 @@ scr_function_t scriptFunctions[] =
 	#endif
 
 	#if COMPILE_LEVEL == 1
+	{"getClosestPlayerByViewOriginInRange", gsc_level_getclosestplayerbyvieworigininrange, 0},
 	{"getClosestPlayerInRange", gsc_level_getclosestplayerinrange, 0},
 	{"getEntityCount", gsc_level_getentitycount, 0},
 	{"getMovers", gsc_level_getmovers, 0},
