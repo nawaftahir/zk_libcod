@@ -143,4 +143,29 @@ void gsc_level_setnorthyaw()
 	stackPushBool(qtrue);
 }
 
+void gsc_level_getpvs()
+{
+	vec3_t o1, o2;
+
+	if ( !stackGetParams("vv", o1, o2) )
+	{
+		stackError("gsc_level_getpvs() bad args (expected two origin vectors)");
+		stackPushUndefined();
+		return;
+	}
+
+	int cluster1 = CM_LeafCluster(CM_PointLeafnum(o1));
+	int cluster2 = CM_LeafCluster(CM_PointLeafnum(o2));
+
+	if ( cluster1 < 0 || cluster2 < 0 || cluster2 >= cm.numClusters )
+	{
+		stackPushInt(1);
+		return;
+	}
+
+	byte *pvs = CM_ClusterPVS(cluster1);
+	int visible = ( pvs[cluster2 >> 3] & ( 1 << ( cluster2 & 7 ) ) ) != 0;
+	stackPushInt(visible ? 1 : 0);
+}
+
 #endif

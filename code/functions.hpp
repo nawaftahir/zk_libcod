@@ -1515,6 +1515,12 @@ static const CM_BoxLeafnums_t CM_BoxLeafnums = (CM_BoxLeafnums_t)0x08058D6A;
 typedef int (*CM_LeafCluster_t)(int leafNum);
 static const CM_LeafCluster_t CM_LeafCluster = (CM_LeafCluster_t)0x080526F8;
 
+typedef int (*CM_PointLeafnum_t)(const vec3_t p);
+static const CM_PointLeafnum_t CM_PointLeafnum = (CM_PointLeafnum_t)0x08058C30;
+
+typedef byte * (*CM_ClusterPVS_t)(int cluster);
+static const CM_ClusterPVS_t CM_ClusterPVS = (CM_ClusterPVS_t)0x08059186;
+
 typedef void (*CM_UnlinkEntity_t)(svEntity_t *ent);
 static const CM_UnlinkEntity_t CM_UnlinkEntity = (CM_UnlinkEntity_t)0x0805DCA4;
 

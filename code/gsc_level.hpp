@@ -7,6 +7,7 @@
 void gsc_level_getentitycount();
 void gsc_level_getmovers();
 void gsc_level_getnumberofstaticmodels();
+void gsc_level_getpvs();
 void gsc_level_getsavepersist();
 void gsc_level_getstaticmodelname();
 void gsc_level_getstaticmodelorigin();
