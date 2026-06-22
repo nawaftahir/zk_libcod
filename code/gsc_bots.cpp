@@ -448,4 +448,30 @@ void gsc_bots_resettestclientnaming()
 	stackPushBool(qtrue);
 }
 
+void gsc_bots_clearbotinputs(scr_entref_t ref)
+{
+	int id = ref.entnum;
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_bots_clearbotinputs() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	if ( client->netchan.remoteAddress.type != NA_BOT )
+	{
+		stackError("gsc_bots_clearbotinputs() player %i is not a bot", id);
+		stackPushUndefined();
+		return;
+	}
+
+	customPlayerState[id].botForwardMove = 0;
+	customPlayerState[id].botRightMove   = 0;
+	customPlayerState[id].botButtons     = 0;
+
+	stackPushBool(qtrue);
+}
+
 #endif

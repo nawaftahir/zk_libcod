@@ -1,0 +1,73 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>self clearBotInputs()</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Bots<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Wipes all persistent bot input state for the calling bot in a single call:</p>
+<UL>
+<LI>botForwardMove = 0 (stops walking forward or backward)</LI>
+<LI>botRightMove = 0 (stops strafing)</LI>
+<LI>botButtons = 0 (releases every held button: jump, crouch, prone, lean left, lean right, fire, melee, frag, smoke, use, ADS)</LI>
+</UL>
+<p>Bot inputs in libcod are persistent: setBotStance("prone") leaves the prone bit set until you flip it back, setLean("left") keeps leaning until cleared, fireWeapon(1) keeps the trigger held until fireWeapon(0). If a bot dies mid-action, the next life starts with those buttons still pressed.</p>
+<p>Call this once on each respawn (waittill "spawned_player") so every life starts at a clean neutral state.</p>
+<p>Errors if called on a non-bot or an entity number outside MAX_CLIENTS.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+respawn_input_reset()
+{
+    self endon("disconnect");
+    for (;;)
+    {
+        self waittill("spawned_player");
+        self clearBotInputs();
+    }
+}
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>None.</H3>
+</TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>Boolean true on success. Stack-errors and returns undefined if self is not a bot or the entity number is out of range.</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

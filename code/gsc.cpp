@@ -339,6 +339,7 @@ xfunction_t Scr_GetCustomFunction(const char **fname, int *fdev)
 scr_method_t scriptMethods[] =
 {
 	#if COMPILE_BOTS == 1
+	{"clearBotInputs", gsc_bots_clearbotinputs, 0},
 	{"fireWeapon", gsc_bots_fireweapon, 0},
 	{"meleeWeapon", gsc_bots_meleeweapon, 0},
 	{"reloadWeapon", gsc_bots_reloadweapon, 0},

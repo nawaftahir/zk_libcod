@@ -16,5 +16,6 @@ void gsc_bots_setaim(scr_entref_t id);
 void gsc_bots_switchtoweaponid(scr_entref_t id);
 void gsc_bots_setnexttestclientname();
 void gsc_bots_resettestclientnaming();
+void gsc_bots_clearbotinputs(scr_entref_t id);
 
 #endif
