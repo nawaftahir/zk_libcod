@@ -4,6 +4,7 @@
 /* gsc functions */
 #include "gsc.hpp"
 
+void gsc_level_getclosestplayerinrange();
 void gsc_level_getentitycount();
 void gsc_level_getmovers();
 void gsc_level_getnumberofstaticmodels();

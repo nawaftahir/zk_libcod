@@ -159,6 +159,103 @@ void gsc_level_setnorthyaw()
 	stackPushBool(qtrue);
 }
 
+void gsc_level_getclosestplayerinrange()
+{
+	int args = Scr_GetNumParam();
+
+	if ( args < 1 || Scr_GetType(0) != VAR_VECTOR )
+	{
+		stackError("gsc_level_getclosestplayerinrange() requires origin (vector)");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t origin;
+	Scr_GetVector(0, origin);
+
+	float maxDistSq = 0.0f;
+	bool hasMaxDist = false;
+	if ( args > 1 && Scr_GetType(1) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(1) != VAR_FLOAT && Scr_GetType(1) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getclosestplayerinrange() maxDistSq must be a number");
+			stackPushUndefined();
+			return;
+		}
+		maxDistSq = Scr_GetFloat(1);
+		if ( maxDistSq < 0.0f )
+		{
+			stackError("gsc_level_getclosestplayerinrange() maxDistSq must be >= 0");
+			stackPushUndefined();
+			return;
+		}
+		hasMaxDist = true;
+	}
+
+	int filterTeam = -1;
+	if ( args > 2 && Scr_GetType(2) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(2) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getclosestplayerinrange() filterTeam must be an int");
+			stackPushUndefined();
+			return;
+		}
+		filterTeam = Scr_GetInt(2);
+	}
+
+	int contentMask = 0;
+	bool hasTraceCheck = false;
+	if ( args > 3 && Scr_GetType(3) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(3) != VAR_INTEGER )
+		{
+			stackError("gsc_level_getclosestplayerinrange() contentMask must be an int");
+			stackPushUndefined();
+			return;
+		}
+		contentMask = Scr_GetInt(3);
+		hasTraceCheck = true;
+	}
+
+	int maxClients = sv_maxclients->current.integer;
+	gentity_t *best = NULL;
+	float bestDistSq = hasMaxDist ? maxDistSq : 0.0f;
+	bool found = false;
+
+	for ( int i = 0; i < maxClients; i++ )
+	{
+		gentity_t *ent = &g_entities[i];
+		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
+			continue;
+
+		float dx = ent->r.currentOrigin[0] - origin[0];
+		float dy = ent->r.currentOrigin[1] - origin[1];
+		float dz = ent->r.currentOrigin[2] - origin[2];
+		float d2 = dx * dx + dy * dy + dz * dz;
+		if ( hasMaxDist && d2 > maxDistSq )
+			continue;
+
+		if ( hasTraceCheck && !G_LocationalTracePassed(origin, ent->r.currentOrigin, ent->s.number, contentMask) )
+			continue;
+
+		if ( !found || d2 < bestDistSq )
+		{
+			best = ent;
+			bestDistSq = d2;
+			found = true;
+		}
+	}
+
+	if ( found )
+		stackPushEntity(best);
+	else
+		stackPushUndefined();
+}
+
 void gsc_level_getplayersinrange()
 {
 	int args = Scr_GetNumParam();
