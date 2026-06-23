@@ -1,6 +1,7 @@
 #include "gsc_level.hpp"
 
 extern dvar_t *sv_maxclients;
+extern customStringIndex_t custom_scr_const;
 
 #if COMPILE_LEVEL == 1
 
@@ -601,7 +602,7 @@ void gsc_level_getpvs()
 	int cluster1 = CM_LeafCluster(CM_PointLeafnum(o1));
 	int cluster2 = CM_LeafCluster(CM_PointLeafnum(o2));
 
-	if ( cluster1 < 0 || cluster2 < 0 || cluster2 >= cm.numClusters )
+	if ( cluster1 < 0 || cluster1 >= cm.numClusters || cluster2 < 0 || cluster2 >= cm.numClusters )
 	{
 		stackPushInt(1);
 		return;
@@ -610,6 +611,55 @@ void gsc_level_getpvs()
 	byte *pvs = CM_ClusterPVS(cluster1);
 	int visible = ( pvs[cluster2 >> 3] & ( 1 << ( cluster2 & 7 ) ) ) != 0;
 	stackPushInt(visible ? 1 : 0);
+}
+
+void gsc_level_getpvsinfo()
+{
+	vec3_t o1, o2;
+
+	if ( !stackGetParams("vv", o1, o2) )
+	{
+		stackError("gsc_level_getpvsinfo() bad args (expected two origin vectors)");
+		stackPushUndefined();
+		return;
+	}
+
+	int cluster1 = CM_LeafCluster(CM_PointLeafnum(o1));
+	int cluster2 = CM_LeafCluster(CM_PointLeafnum(o2));
+	int visible;
+	int fallback;
+
+	if ( cluster1 < 0 || cluster1 >= cm.numClusters || cluster2 < 0 || cluster2 >= cm.numClusters )
+	{
+		visible = 1;
+		fallback = 1;
+	}
+	else
+	{
+		byte *pvs = CM_ClusterPVS(cluster1);
+		visible = ( pvs[cluster2 >> 3] & ( 1 << ( cluster2 & 7 ) ) ) != 0 ? 1 : 0;
+		fallback = cm.vised ? 0 : 1;
+	}
+
+	stackPushArray();
+
+	stackPushInt(visible);
+	Scr_AddArrayStringIndexed(custom_scr_const.visible);
+
+	stackPushInt(cluster1);
+	Scr_AddArrayStringIndexed(custom_scr_const.cluster1);
+
+	stackPushInt(cluster2);
+	Scr_AddArrayStringIndexed(custom_scr_const.cluster2);
+
+	stackPushInt(cm.numClusters);
+	Scr_AddArrayStringIndexed(custom_scr_const.numclusters);
+
+	stackPushInt(cm.vised ? 1 : 0);
+	Scr_AddArrayStringIndexed(custom_scr_const.vised);
+
+	stackPushInt(fallback);
+	Scr_AddArrayStringIndexed(custom_scr_const.fallback);
 }
 
 void gsc_level_getentitiesinradius()

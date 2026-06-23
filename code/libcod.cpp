@@ -418,16 +418,22 @@ void custom_GScr_LoadConsts(void)
 	custom_scr_const.bot_trigger = GScr_AllocString("bot_trigger");
 	custom_scr_const.bounce = GScr_AllocString("bounce");
 	custom_scr_const.bullet = GScr_AllocString("bullet");
+	custom_scr_const.cluster1 = GScr_AllocString("cluster1");
+	custom_scr_const.cluster2 = GScr_AllocString("cluster2");
 	custom_scr_const.contents = GScr_AllocString("contents");
+	custom_scr_const.fallback = GScr_AllocString("fallback");
 	custom_scr_const.flags = GScr_AllocString("flags");
 	custom_scr_const.land = GScr_AllocString("land");
 	custom_scr_const.material = GScr_AllocString("material");
+	custom_scr_const.numclusters = GScr_AllocString("numClusters");
 	#if COMPILE_CUSTOM_VOICE == 1
 	custom_scr_const.sound_file_done = GScr_AllocString("sound_file_done");
 	custom_scr_const.sound_file_stop = GScr_AllocString("sound_file_stop");
 	#endif
 	custom_scr_const.title = GScr_AllocString("title");
 	custom_scr_const.trigger_radius = GScr_AllocString("trigger_radius");
+	custom_scr_const.vised = GScr_AllocString("vised");
+	custom_scr_const.visible = GScr_AllocString("visible");
 
 	hook_GScr_LoadConsts->unhook();
 	void (*GScr_LoadConsts)(void);

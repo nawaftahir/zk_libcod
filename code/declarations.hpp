@@ -4321,16 +4321,22 @@ typedef struct
 	unsigned short bot_trigger;
 	unsigned short bounce;
 	unsigned short bullet;
+	unsigned short cluster1;
+	unsigned short cluster2;
 	unsigned short contents;
+	unsigned short fallback;
 	unsigned short flags;
 	unsigned short land;
 	unsigned short material;
+	unsigned short numclusters;
 	#if COMPILE_CUSTOM_VOICE == 1
 	unsigned short sound_file_done;
 	unsigned short sound_file_stop;
 	#endif
 	unsigned short title;
 	unsigned short trigger_radius;
+	unsigned short vised;
+	unsigned short visible;
 } customStringIndex_t;
 
 typedef enum

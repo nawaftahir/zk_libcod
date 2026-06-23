@@ -13,6 +13,7 @@ void gsc_level_getnumberofstaticmodels();
 void gsc_level_getplayersbyvieworigininrange();
 void gsc_level_getplayersinrange();
 void gsc_level_getpvs();
+void gsc_level_getpvsinfo();
 void gsc_level_getsavepersist();
 void gsc_level_getstaticmodelname();
 void gsc_level_getstaticmodelorigin();

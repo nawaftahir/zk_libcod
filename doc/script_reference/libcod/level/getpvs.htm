@@ -29,7 +29,7 @@ Module: Level<BR>
 <H3>
 <p>O(1) Potentially-Visible-Set lookup between two world points. Returns 1 if the BSP says origin2 lies in the PVS of origin1's leaf, else 0. Designed to run BEFORE expensive sightTracePassed / bulletTrace calls.</p>
 <p>A return of 0 is authoritative: the points cannot see each other and any sight trace will fail. A return of 1 means "potentially visible" - the caller still needs a real trace to confirm line of sight.</p>
-<p>If either origin sits in an invalid BSP leaf (outside the playable area, above the sky brush, in map void), the function returns 1 as a fail-safe so the caller's expensive trace still runs.</p>
+<p>If either origin's cluster is out of bounds (negative, outside the playable area, above the sky brush, in map void, or beyond cm.numClusters), the function returns 1 as a fail-safe so the caller's expensive trace still runs. Use getPVSInfo if you need to distinguish a real "visible" from this fail-open path.</p>
 </H3>
 </TR></TD></TABLE>
 <BR><BR>
