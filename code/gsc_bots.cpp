@@ -474,4 +474,42 @@ void gsc_bots_clearbotinputs(scr_entref_t ref)
 	stackPushBool(qtrue);
 }
 
+void gsc_bots_switchtoweaponname(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	char *name;
+
+	if ( !stackGetParams("s", &name) )
+	{
+		stackError("gsc_bots_switchtoweaponname() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_bots_switchtoweaponname() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	client_t *client = &svs.clients[id];
+	if ( client->netchan.remoteAddress.type != NA_BOT )
+	{
+		stackError("gsc_bots_switchtoweaponname() player %i is not a bot", id);
+		stackPushUndefined();
+		return;
+	}
+
+	int idx = BG_FindWeaponIndexForName(name);
+	if ( idx <= 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	customPlayerState[id].botWeapon = idx;
+	stackPushBool(qtrue);
+}
+
 #endif

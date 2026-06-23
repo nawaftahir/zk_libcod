@@ -351,6 +351,7 @@ scr_method_t scriptMethods[] =
 	{"setWalkDir", gsc_bots_setwalkdir, 0},
 	{"setWalkValues", gsc_bots_setwalkvalues, 0},
 	{"switchToWeaponId", gsc_bots_switchtoweaponid, 0},
+	{"switchToWeaponName", gsc_bots_switchtoweaponname, 0},
 	{"throwGrenade", gsc_bots_throwgrenade, 0},
 	{"throwSmokeGrenade", gsc_bots_throwsmokegrenade, 0},
 	#endif
