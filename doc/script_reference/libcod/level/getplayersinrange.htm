@@ -15,7 +15,7 @@ UL  { margin-bottom:0; }
 </style>
 
 <HR>
-<H1>getPlayersInRange( &lt;origin&gt;, [maxDistSq], [filterTeam], [contentMask] )</H1>
+<H1>getPlayersInRange( &lt;origin&gt;, [maxDistSq], [filterTeam], [contentMask], [ignoreEnt] )</H1>
 <HR>
 <BODY BGCOLOR='B0C4DE'>
 <I>
@@ -65,6 +65,7 @@ victims = getPlayersInRange(grenade.origin, blast_r * blast_r, 2, mask);
 <LI>2 : &lt;maxDistSq&gt; Squared distance cap. Pass undefined for unlimited range.</LI>
 <LI>3 : &lt;filterTeam&gt; Only clients on this team. 0=FREE, 1=AXIS, 2=ALLIES, 3=SPECTATOR. Pass undefined or a negative integer for any team.</LI>
 <LI>4 : &lt;contentMask&gt; If set, runs a locational trace from origin to each candidate's currentOrigin with this mask. Only players the trace reaches are returned.</LI>
+<LI>5 : &lt;ignoreEnt&gt; If set, this entity is skipped during the scan. Use self to exclude the caller from its own proximity query.</LI>
 </UL></TR></TD></TABLE>
 <BR>
 <H2>Returns:</H2>

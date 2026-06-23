@@ -219,6 +219,18 @@ void gsc_level_getclosestplayerbyvieworigininrange()
 		hasTraceCheck = true;
 	}
 
+	gentity_t *ignoreEnt = NULL;
+	if ( args > 4 && Scr_GetType(4) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(4) != VAR_OBJECT )
+		{
+			stackError("gsc_level_getclosestplayerbyvieworigininrange() ignoreEnt must be an entity");
+			stackPushUndefined();
+			return;
+		}
+		ignoreEnt = Scr_GetEntity(4);
+	}
+
 	int maxClients = sv_maxclients->current.integer;
 	gentity_t *best = NULL;
 	float bestDistSq = hasMaxDist ? maxDistSq : 0.0f;
@@ -228,6 +240,8 @@ void gsc_level_getclosestplayerbyvieworigininrange()
 	{
 		gentity_t *ent = &g_entities[i];
 		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( ignoreEnt != NULL && ent == ignoreEnt )
 			continue;
 		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
 			continue;
@@ -319,6 +333,18 @@ void gsc_level_getclosestplayerinrange()
 		hasTraceCheck = true;
 	}
 
+	gentity_t *ignoreEnt = NULL;
+	if ( args > 4 && Scr_GetType(4) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(4) != VAR_OBJECT )
+		{
+			stackError("gsc_level_getclosestplayerinrange() ignoreEnt must be an entity");
+			stackPushUndefined();
+			return;
+		}
+		ignoreEnt = Scr_GetEntity(4);
+	}
+
 	int maxClients = sv_maxclients->current.integer;
 	gentity_t *best = NULL;
 	float bestDistSq = hasMaxDist ? maxDistSq : 0.0f;
@@ -328,6 +354,8 @@ void gsc_level_getclosestplayerinrange()
 	{
 		gentity_t *ent = &g_entities[i];
 		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( ignoreEnt != NULL && ent == ignoreEnt )
 			continue;
 		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
 			continue;
@@ -416,6 +444,18 @@ void gsc_level_getplayersbyvieworigininrange()
 		hasTraceCheck = true;
 	}
 
+	gentity_t *ignoreEnt = NULL;
+	if ( args > 4 && Scr_GetType(4) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(4) != VAR_OBJECT )
+		{
+			stackError("gsc_level_getplayersbyvieworigininrange() ignoreEnt must be an entity");
+			stackPushUndefined();
+			return;
+		}
+		ignoreEnt = Scr_GetEntity(4);
+	}
+
 	int maxClients = sv_maxclients->current.integer;
 
 	stackPushArray();
@@ -423,6 +463,8 @@ void gsc_level_getplayersbyvieworigininrange()
 	{
 		gentity_t *ent = &g_entities[i];
 		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( ignoreEnt != NULL && ent == ignoreEnt )
 			continue;
 		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
 			continue;
@@ -505,6 +547,18 @@ void gsc_level_getplayersinrange()
 		hasTraceCheck = true;
 	}
 
+	gentity_t *ignoreEnt = NULL;
+	if ( args > 4 && Scr_GetType(4) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(4) != VAR_OBJECT )
+		{
+			stackError("gsc_level_getplayersinrange() ignoreEnt must be an entity");
+			stackPushUndefined();
+			return;
+		}
+		ignoreEnt = Scr_GetEntity(4);
+	}
+
 	int maxClients = sv_maxclients->current.integer;
 
 	stackPushArray();
@@ -512,6 +566,8 @@ void gsc_level_getplayersinrange()
 	{
 		gentity_t *ent = &g_entities[i];
 		if ( !helpers_is_active_player(ent) )
+			continue;
+		if ( ignoreEnt != NULL && ent == ignoreEnt )
 			continue;
 		if ( filterTeam >= 0 && ent->client->sess.cs.team != filterTeam )
 			continue;
