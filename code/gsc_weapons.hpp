@@ -47,5 +47,6 @@ void gsc_weapons_getweapondisplayname();
 void gsc_weapons_resetignoredweapons();
 void gsc_weapons_ignoreweapon();
 void gsc_weapons_setdefaultweapon();
+void gsc_weapons_weaponnametoid();
 
 #endif

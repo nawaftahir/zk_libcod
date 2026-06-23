@@ -1171,4 +1171,20 @@ void gsc_weapons_spawngrenade(scr_entref_t ref)
 	stackPushEntity(grenade);
 }
 
+void gsc_weapons_weaponnametoid()
+{
+	int args = Scr_GetNumParam();
+
+	if ( args < 1 || Scr_GetType(0) != VAR_STRING )
+	{
+		stackError("gsc_weapons_weaponnametoid() requires weaponName (string)");
+		stackPushUndefined();
+		return;
+	}
+
+	const char *name = Scr_GetString(0);
+	int idx = BG_FindWeaponIndexForName(name);
+	stackPushInt(idx);
+}
+
 #endif

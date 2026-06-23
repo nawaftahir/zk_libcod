@@ -310,6 +310,7 @@ scr_function_t scriptFunctions[] =
 	{"resetIgnoredWeapons", gsc_weapons_resetignoredweapons, 0},
 	{"ignoreWeapon", gsc_weapons_ignoreweapon, 0},
 	{"setDefaultWeapon", gsc_weapons_setdefaultweapon, 0},
+	{"weaponNameToId", gsc_weapons_weaponnametoid, 0},
 	#endif
 	{NULL, NULL, 0} // Terminator
 };
