@@ -1,0 +1,88 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>self getVisibilityToTarget( &lt;target&gt;, [contentMask] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Player<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Bitmask indicating which of four body points on target are visible from self's eye position.</p>
+<UL>
+<LI>bit 0 (value 1) = head visible</LI>
+<LI>bit 1 (value 2) = chest visible</LI>
+<LI>bit 2 (value 4) = waist visible</LI>
+<LI>bit 3 (value 8) = feet visible</LI>
+</UL>
+<p>Returns 0 if no body point is visible, 15 if all four are. The four points are Z-offsets above target.origin (head=+60, chest=+48, waist=+24, feet=+0). DEFAULT_VIEWHEIGHT in CoD2 is 60, so the offsets line up with a standing target. A crouched target's actual viewheight is 40 and a prone target's is 11, so the upper points float above the actual body for those stances. Useful for "is the silhouette exposed" decisions but not pixel-accurate against the hitbox. Use getVisibilityToTargetBones if stance matters.</p>
+<p>Each point runs a G_LocationalTrace from self's view origin. self is the ignored entity (the eye sits at the top of the standing hitbox so otherwise the trace would immediately self-collide). A sample point counts as visible if the trace reached its full distance OR if it stopped on the target's own body -- the second branch covers body-inclusive content masks where the trace stops at the target body surface just before the sample.</p>
+<p>One call replaces four separate bulletTracePassed / sightTracePassed calls plus the wiring to pack the result.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+mask = self getVisibilityToTarget(enemy);
+
+// bit 0 = head -- if exposed, fire
+if (mask &amp; 1)
+    self fireWeapon(1);
+else if (mask == 0)
+    self fireWeapon(0);   // nothing visible, hold fire
+
+// Head plus chest plus waist visible at minimum
+if (mask &gt;= 7)
+    self iprintln("good shot");
+
+// With explicit mask -- only solid world blocks
+worldMask = 1;
+mask = self getVisibilityToTarget(enemy, worldMask);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;target&gt; The entity to test visibility on. Usually a player; any in-use entity with a valid currentOrigin works.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>2 : &lt;contentMask&gt; Trace content mask. Defaults to MASK_OPAQUE_AI minus CONTENTS_BODY (0x801803 / 8395267) -- world solids + foliage + sky block; entity bodies (self, target, bystanders) do not. Pass MASK_SHOT (0x2802831) for body-inclusive behaviour, or 1 for solid world only.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>Integer bitmask 0..15. Stack-errors and returns undefined on argument error or if the target entity is not in use.</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

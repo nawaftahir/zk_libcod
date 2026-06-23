@@ -1794,6 +1794,97 @@ void gsc_player_isonladder(scr_entref_t ref)
 	stackPushBool(ps->pm_flags & PMF_LADDER ? qtrue : qfalse);
 }
 
+// Bitmask of which target body points are visible from self's eye, sampled
+// at fixed Z-offsets above target.origin (head=+60, chest=+48, waist=+24,
+// feet=+0). DEFAULT_VIEWHEIGHT=60 (CoD2rev_Server src/bgame/bg_public.h:1294)
+// so these offsets line up with a standing target. For crouched
+// (CROUCH_VIEWHEIGHT=40) or prone (PRONE_VIEWHEIGHT=11) targets the upper
+// points float above the actual silhouette -- still useful for "any
+// silhouette exposed" decisions, not pixel-accurate. Use
+// getVisibilityToTargetBones for stance-accurate bone-tag traces.
+// Bits: 0 = head, 1 = chest, 2 = waist, 3 = feet.
+//
+// Default contentMask 0x801803 = MASK_OPAQUE_AI minus CONTENTS_BODY
+// (declarations.hpp:275 / 283). Matches sightTracePassed(ignoreChars=1):
+// world solids + foliage + sky block; entity bodies do not. So neither
+// self, target, nor bystanders block the trace -- only geometry. Pass
+// MASK_SHOT (0x2802831, declarations.hpp:274) or any body-inclusive mask
+// explicitly if bystanders should block.
+//
+// Trace uses G_LocationalTrace with passEntityNum=self so the eye-inside-
+// own-bbox edge case (eye sits at top of standing hitbox) cannot self-
+// collide. A sample point is considered visible if trace.fraction >= 1.0
+// (reached the point) OR trace.entityNum == target (a body-inclusive
+// mask stopped the trace on the target's body just before the point).
+void gsc_player_getvisibilitytotarget(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	int args = Scr_GetNumParam();
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getvisibilitytotarget() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( args < 1 || Scr_GetType(0) != VAR_OBJECT )
+	{
+		stackError("gsc_player_getvisibilitytotarget() requires target (entity)");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *target = Scr_GetEntity(0);
+	if ( target == NULL || !target->r.inuse )
+	{
+		stackError("gsc_player_getvisibilitytotarget() target entity is not in use");
+		stackPushUndefined();
+		return;
+	}
+
+	int contentMask = 0x801803;
+	if ( args > 1 && Scr_GetType(1) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(1) != VAR_INTEGER )
+		{
+			stackError("gsc_player_getvisibilitytotarget() contentMask must be an int");
+			stackPushUndefined();
+			return;
+		}
+		contentMask = Scr_GetInt(1);
+	}
+
+	vec3_t eye;
+	G_GetPlayerViewOrigin(&g_entities[id], eye);
+
+	float *org = target->r.currentOrigin;
+	vec3_t bones[4];
+	bones[0][0] = org[0]; bones[0][1] = org[1]; bones[0][2] = org[2] + 60.0f; // head
+	bones[1][0] = org[0]; bones[1][1] = org[1]; bones[1][2] = org[2] + 48.0f; // chest
+	bones[2][0] = org[0]; bones[2][1] = org[1]; bones[2][2] = org[2] + 24.0f; // waist
+	bones[3][0] = org[0]; bones[3][1] = org[1]; bones[3][2] = org[2];          // feet
+
+	// Trace ignores self (eye is inside self's bounding box, so trace would
+	// otherwise immediately collide with own body). Treat the bone as visible
+	// if the trace reaches its full distance OR if it stopped on the target's
+	// own body (the sample point sits at/near the body surface for chest and
+	// waist; hitting target counts as "visible" since LoS to the target was
+	// otherwise clear).
+	int selfIgnore = id;
+	int targetEntNum = target->s.number;
+	int mask = 0;
+	trace_t trace;
+	for ( int i = 0; i < 4; i++ )
+	{
+		G_LocationalTrace(&trace, eye, bones[i], selfIgnore, contentMask, NULL);
+		if ( trace.fraction >= 1.0f || trace.entityNum == targetEntNum )
+			mask |= (1 << i);
+	}
+
+	stackPushInt(mask);
+}
+
 void gsc_player_isusingturret(scr_entref_t ref)
 {
 	int id = ref.entnum;
