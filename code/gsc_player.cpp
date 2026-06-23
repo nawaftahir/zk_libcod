@@ -1885,6 +1885,126 @@ void gsc_player_getvisibilitytotarget(scr_entref_t ref)
 	stackPushInt(mask);
 }
 
+// Bitmask of which target bones are visible from self's eye, sampled via
+// G_DObjGetWorldTagPos. Accurate against crouched and prone targets whose
+// hitbox sits below a standing silhouette. Eight bits cover every CoD2
+// hit-location group from hitLocation_t (CoD2rev_Server src/bgame/
+// bg_public.h:1146-1170). Each limb is sampled at three joints (proximal,
+// middle, distal); the limb bit is set on the first joint that reaches,
+// so an arm or leg peeking around cover still registers.
+// SL_GetString type=1 (Scr_AllocString convention, CoD2rev_Server
+// src/script/scr_stringlist.cpp:347) is the interning the engine uses for
+// tag-name lookups in G_DObjGetWorldTagPos.
+//
+// Bit | Bones sampled                           | HITLOC enum covered
+// ----+-----------------------------------------+----------------------------
+//   0 | j_head                                  | HEAD (2), HELMET (1)
+//   1 | j_neck                                  | NECK (3)
+//   2 | j_spine4                                | TORSO_UPR (4)
+//   3 | j_spine1                                | TORSO_LWR (5)
+//   4 | j_shoulder_le, j_elbow_le, j_wrist_le   | L_ARM_UPR (7), L_ARM_LWR (9), L_HAND (11)
+//   5 | j_shoulder_ri, j_elbow_ri, j_wrist_ri   | R_ARM_UPR (6), R_ARM_LWR (8), R_HAND (10)
+//   6 | j_hip_le, j_knee_le, j_ankle_le         | L_LEG_UPR (13), L_LEG_LWR (15), L_FOOT (17)
+//   7 | j_hip_ri, j_knee_ri, j_ankle_ri         | R_LEG_UPR (12), R_LEG_LWR (14), R_FOOT (16)
+//
+// Default contentMask 0x801803 = MASK_OPAQUE_AI minus CONTENTS_BODY
+// (declarations.hpp:275 / 283). Matches sightTracePassed(ignoreChars=1):
+// world solids + foliage + sky block; entity bodies do not. Trace uses
+// G_LocationalTrace with passEntityNum=self so the eye-inside-own-bbox
+// edge case cannot self-collide. A bone is considered visible if
+// trace.fraction >= 1.0 OR trace.entityNum == target (the second branch
+// catches body-inclusive masks where the trace stops on the target's
+// own body just before the bone position).
+void gsc_player_getvisibilitytotargetbones(scr_entref_t ref)
+{
+	int id = ref.entnum;
+	int args = Scr_GetNumParam();
+
+	if ( id >= MAX_CLIENTS )
+	{
+		stackError("gsc_player_getvisibilitytotargetbones() entity %i is not a player", id);
+		stackPushUndefined();
+		return;
+	}
+
+	if ( args < 1 || Scr_GetType(0) != VAR_OBJECT )
+	{
+		stackError("gsc_player_getvisibilitytotargetbones() requires target (entity)");
+		stackPushUndefined();
+		return;
+	}
+
+	gentity_t *target = Scr_GetEntity(0);
+	if ( target == NULL || !target->r.inuse )
+	{
+		stackError("gsc_player_getvisibilitytotargetbones() target entity is not in use");
+		stackPushUndefined();
+		return;
+	}
+
+	int contentMask = 0x801803;
+	if ( args > 1 && Scr_GetType(1) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(1) != VAR_INTEGER )
+		{
+			stackError("gsc_player_getvisibilitytotargetbones() contentMask must be an int");
+			stackPushUndefined();
+			return;
+		}
+		contentMask = Scr_GetInt(1);
+	}
+
+	vec3_t eye;
+	G_GetPlayerViewOrigin(&g_entities[id], eye);
+
+	// Trace ignores self (the eye is inside self's bounding box, so trace
+	// would otherwise immediately collide with own body). Bones live inside
+	// the target's body so the trace endpoint sits past the body surface --
+	// we treat the bone as visible if the trace either reached the bone or
+	// stopped on the target itself.
+	int selfIgnore = id;
+	int targetEntNum = target->s.number;
+	int mask = 0;
+	vec3_t bonePos;
+	trace_t trace;
+
+	const char *singleBones[4] = { "j_head", "j_neck", "j_spine4", "j_spine1" };
+	for ( int i = 0; i < 4; i++ )
+	{
+		unsigned int tagIdx = SL_GetString(singleBones[i], 1);
+		if ( !G_DObjGetWorldTagPos(target, tagIdx, bonePos) )
+			continue;
+		G_LocationalTrace(&trace, eye, bonePos, selfIgnore, contentMask, NULL);
+		if ( trace.fraction >= 1.0f || trace.entityNum == targetEntNum )
+			mask |= (1 << i);
+	}
+
+	// Limb groups: three sample joints per limb, early-out on first hit.
+	const char *limbs[4][3] = {
+		{ "j_shoulder_le", "j_elbow_le", "j_wrist_le" },
+		{ "j_shoulder_ri", "j_elbow_ri", "j_wrist_ri" },
+		{ "j_hip_le",      "j_knee_le",  "j_ankle_le" },
+		{ "j_hip_ri",      "j_knee_ri",  "j_ankle_ri" },
+	};
+	for ( int limb = 0; limb < 4; limb++ )
+	{
+		for ( int joint = 0; joint < 3; joint++ )
+		{
+			unsigned int idx = SL_GetString(limbs[limb][joint], 1);
+			if ( !G_DObjGetWorldTagPos(target, idx, bonePos) )
+				continue;
+			G_LocationalTrace(&trace, eye, bonePos, selfIgnore, contentMask, NULL);
+			if ( trace.fraction >= 1.0f || trace.entityNum == targetEntNum )
+			{
+				mask |= (1 << (4 + limb));
+				break;
+			}
+		}
+	}
+
+	stackPushInt(mask);
+}
+
 void gsc_player_isusingturret(scr_entref_t ref)
 {
 	int id = ref.entnum;

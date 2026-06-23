@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+</HEAD>
+
+<style type="text/css">
+<!--
+H1  { padding: 0; margin: 0; font-size: 16pt; font-weight:bold; font-family:courier new; }
+H2  { padding: 0; margin: 4; }
+H3  { padding: 0; margin: 4; font-size: 13pt; font-weight:normal; }
+P   { padding: 0; margin: 4; }
+PRE { padding: 0; margin: 4; font-size: 10pt; font-weight:normal; color:#EEEEEE; }
+TD  { padding: 4; margin: 0; }
+UL  { margin-bottom:0; }
+-->
+</style>
+
+<HR>
+<H1>self getVisibilityToTargetBones( &lt;target&gt;, [contentMask] )</H1>
+<HR>
+<BODY BGCOLOR='B0C4DE'>
+<I>
+Module: Player<BR>
+</I>
+
+<BR>
+<H2>Summary:</H2>
+<TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
+<TR><TD BGCOLOR="C0D4EE">
+<H3>
+<p>Bitmask indicating which actual model bones on target are visible from self's eye position. Unlike getVisibilityToTarget which samples four fixed Z-offsets above the entity origin, this native uses G_DObjGetWorldTagPos to read real bone world positions. That makes it accurate against crouched and prone targets whose hitbox sits below a standing silhouette.</p>
+<p>Covers every CoD2 hit-location group in eight bits. Head, neck, upper torso (j_spine4) and lower torso (j_spine1) each get a single trace. Arms and legs each get three sample joints (proximal, middle, distal) and the limb bit is set on the first joint that reaches, so any visible part of an arm or leg sticking around cover registers.</p>
+<UL>
+<LI>bit 0 (value 1)   = j_head                                    | HITLOC HEAD, HELMET</LI>
+<LI>bit 1 (value 2)   = j_neck                                    | HITLOC NECK</LI>
+<LI>bit 2 (value 4)   = j_spine4                                  | HITLOC TORSO_UPR</LI>
+<LI>bit 3 (value 8)   = j_spine1                                  | HITLOC TORSO_LWR</LI>
+<LI>bit 4 (value 16)  = j_shoulder_le or j_elbow_le or j_wrist_le | HITLOC L_ARM_UPR, L_ARM_LWR, L_HAND</LI>
+<LI>bit 5 (value 32)  = j_shoulder_ri or j_elbow_ri or j_wrist_ri | HITLOC R_ARM_UPR, R_ARM_LWR, R_HAND</LI>
+<LI>bit 6 (value 64)  = j_hip_le or j_knee_le or j_ankle_le       | HITLOC L_LEG_UPR, L_LEG_LWR, L_FOOT</LI>
+<LI>bit 7 (value 128) = j_hip_ri or j_knee_ri or j_ankle_ri       | HITLOC R_LEG_UPR, R_LEG_LWR, R_FOOT</LI>
+</UL>
+<p>Bones that do not exist on the target's model (e.g. a non-player entity) silently skip and that bit stays 0. Worst case is sixteen traces; arm/leg checks early-out on the first joint that reaches.</p>
+<p>Each trace runs G_LocationalTrace from self's view origin with self as the ignored entity (the eye sits inside self's standing bbox -- without this the trace would self-collide). A bone counts as visible if the trace reached its position OR if it stopped on the target's own body (the latter handles body-inclusive content masks where the trace stops at the target body surface just before the bone).</p>
+<p>Use this instead of getVisibilityToTarget when stance matters, when you need to distinguish head exposure from neck exposure for helmet logic, or when arm/leg-only exposure is the deciding factor.</p>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Example:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="222222">
+<H3>
+<PRE>
+mask = self getVisibilityToTargetBones(enemy);
+
+// Head exposed -> fire
+if (mask &amp; 1)
+    self fireWeapon(1);
+
+// Helmet area only (neck blocked but head visible) -> aim a bit lower
+helmet_only = (mask &amp; 1) &amp;&amp; !(mask &amp; 2);
+
+// Only legs visible -> probably hiding upper body behind low cover
+only_legs = (mask &amp; 192) &amp;&amp; !(mask &amp; 15);
+
+// Arm peeking around right side
+peeking = (mask &amp; 32) &amp;&amp; !(mask &amp; 7);
+</PRE>
+</H3>
+</TR></TD></TABLE>
+<BR><BR>
+<H2>Required Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>1 : &lt;target&gt; The entity to test bone visibility on. Must have a player-like model for all bones to resolve; otherwise some bits will stay 0.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Optional Args:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<UL>
+<LI>2 : &lt;contentMask&gt; Trace content mask. Defaults to MASK_OPAQUE_AI minus CONTENTS_BODY (0x801803 / 8395267) -- world solids + foliage + sky block; entity bodies do not. Pass MASK_SHOT (0x2802831) for body-inclusive behaviour.</LI>
+</UL></TR></TD></TABLE>
+<BR>
+<H2>Returns:</H2>
+<TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
+<TR><TD BGCOLOR="C0D4EE">
+<H3>Integer bitmask 0..255. Stack-errors and returns undefined on argument error or if the target entity is not in use.</H3>
+</TR></TD></TABLE>
+<BR>
+</BODY>
+</HTML>

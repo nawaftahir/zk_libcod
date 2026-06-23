@@ -452,6 +452,7 @@ scr_method_t scriptMethods[] =
 	{"getVelocity", gsc_player_getvelocity, 0},
 	{"getViewOrigin", gsc_player_getvieworigin, 0},
 	{"getVisibilityToTarget", gsc_player_getvisibilitytotarget, 0},
+	{"getVisibilityToTargetBones", gsc_player_getvisibilitytotargetbones, 0},
 	{"getWeaponAnimation", gsc_player_getweaponanimation, 0},
 	{"holdBreathButtonPressed", gsc_player_button_holdbreath, 0},
 	{"isAllowingSpectators", gsc_player_isallowingspectators, 0},

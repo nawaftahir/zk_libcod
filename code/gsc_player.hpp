@@ -70,6 +70,7 @@ void gsc_player_getuserinfo(scr_entref_t ref);
 void gsc_player_getvelocity(scr_entref_t ref);
 void gsc_player_getvieworigin(scr_entref_t ref);
 void gsc_player_getvisibilitytotarget(scr_entref_t ref);
+void gsc_player_getvisibilitytotargetbones(scr_entref_t ref);
 void gsc_player_getweaponanimation(scr_entref_t ref);
 void gsc_player_ischatting(scr_entref_t ref);
 void gsc_player_ishiddenfromscoreboard(scr_entref_t ref);
