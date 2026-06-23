@@ -556,4 +556,74 @@ void gsc_level_getpvs()
 	stackPushInt(visible ? 1 : 0);
 }
 
+void gsc_level_getentitiesinradius()
+{
+	int args = Scr_GetNumParam();
+
+	if ( args < 2 || Scr_GetType(0) != VAR_VECTOR )
+	{
+		stackError("gsc_level_getentitiesinradius() requires origin (vector) and radius (number)");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetType(1) != VAR_FLOAT && Scr_GetType(1) != VAR_INTEGER )
+	{
+		stackError("gsc_level_getentitiesinradius() radius must be a number");
+		stackPushUndefined();
+		return;
+	}
+
+	vec3_t origin;
+	Scr_GetVector(0, origin);
+
+	float radius = Scr_GetFloat(1);
+	if ( radius < 0.0f )
+	{
+		stackError("gsc_level_getentitiesinradius() radius must be >= 0");
+		stackPushUndefined();
+		return;
+	}
+
+	const char *classFilter = NULL;
+	if ( args > 2 && Scr_GetType(2) != VAR_UNDEFINED )
+	{
+		if ( Scr_GetType(2) != VAR_STRING )
+		{
+			stackError("gsc_level_getentitiesinradius() classFilter must be a string");
+			stackPushUndefined();
+			return;
+		}
+		classFilter = Scr_GetString(2);
+	}
+
+	float r2 = radius * radius;
+
+	stackPushArray();
+	gentity_t *ent = g_entities;
+	for ( int i = 0; i < level.num_entities; i++, ent++ )
+	{
+		if ( !ent->r.inuse )
+			continue;
+
+		if ( classFilter != NULL )
+		{
+			if ( ent->classname == 0 )
+				continue;
+			const char *cn = SL_ConvertToString(ent->classname);
+			if ( cn == NULL || strcmp(cn, classFilter) != 0 )
+				continue;
+		}
+
+		float dx = ent->r.currentOrigin[0] - origin[0];
+		float dy = ent->r.currentOrigin[1] - origin[1];
+		float dz = ent->r.currentOrigin[2] - origin[2];
+		if ( dx * dx + dy * dy + dz * dz > r2 )
+			continue;
+
+		stackPushEntity(ent);
+		stackPushArrayLast();
+	}
+}
+
 #endif

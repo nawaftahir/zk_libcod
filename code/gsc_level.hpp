@@ -6,6 +6,7 @@
 
 void gsc_level_getclosestplayerbyvieworigininrange();
 void gsc_level_getclosestplayerinrange();
+void gsc_level_getentitiesinradius();
 void gsc_level_getentitycount();
 void gsc_level_getmovers();
 void gsc_level_getnumberofstaticmodels();
