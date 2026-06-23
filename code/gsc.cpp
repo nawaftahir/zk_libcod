@@ -684,7 +684,7 @@ int stackGetParams(const char *params, ...)
 			int *tmp = va_arg(args, int *);
 			if ( !stackGetParamInt(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not an int\n", i);
+				Com_Printf("stackGetParams() Param %i expected int, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -695,7 +695,7 @@ int stackGetParams(const char *params, ...)
 			float *tmp = va_arg(args, float *);
 			if ( !stackGetParamVector(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a vector\n", i);
+				Com_Printf("stackGetParams() Param %i expected vector, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -706,7 +706,7 @@ int stackGetParams(const char *params, ...)
 			float *tmp = va_arg(args, float *);
 			if ( ! stackGetParamFloat(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a float\n", i);
+				Com_Printf("stackGetParams() Param %i expected float, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -717,7 +717,7 @@ int stackGetParams(const char *params, ...)
 			char **tmp = va_arg(args, char **);
 			if ( !stackGetParamString(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a string\n", i);
+				Com_Printf("stackGetParams() Param %i expected string, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -728,7 +728,7 @@ int stackGetParams(const char *params, ...)
 			unsigned int *tmp = va_arg(args, unsigned int *);
 			if ( !stackGetParamConstString(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a const string\n", i);
+				Com_Printf("stackGetParams() Param %i expected const string, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -739,7 +739,7 @@ int stackGetParams(const char *params, ...)
 			char **tmp = va_arg(args, char **);
 			if ( !stackGetParamLocalizedString(i, tmp) )
 			{
-				Com_DPrintf("\nstackGetParams() Param %i is not a localized string\n", i);
+				Com_Printf("stackGetParams() Param %i expected localized string, got %s\n", i, stackGetParamTypeAsString(i));
 				errors++;
 			}
 			break;
@@ -747,7 +747,7 @@ int stackGetParams(const char *params, ...)
 
 		default:
 			errors++;
-			Com_DPrintf("\nUnknown identifier [%c] passed to stackGetParams()\n", params[i]);
+			Com_Printf("stackGetParams() Unknown format identifier [%c]\n", params[i]);
 			break;
 		}
 	}
