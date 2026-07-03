@@ -152,6 +152,22 @@ if grep -q "COMPILE_WEAPONS 1" config.hpp; then
 	$cc $debug $options $constants -c gsc_weapons.cpp -o objects_$1/gsc_weapons.opp
 fi
 
+if grep -q "COMPILE_HTTP 1" config.hpp; then
+	mongoose_defines="-DMG_TLS=MG_TLS_BUILTIN -DMG_ENABLE_POSIX_FS=0"
+
+	echo "##### COMPILE $1 MONGOOSE.C #####"
+	$cc $debug $options $constants $mongoose_defines -c lib/mongoose/mongoose.c -o objects_$1/mongoose.opp
+
+	echo "##### COMPILE $1 GSC_HTTP.CPP #####"
+	$cc $debug $options $constants $mongoose_defines -c gsc_http.cpp -o objects_$1/gsc_http.opp
+
+	echo "##### COMPILE $1 GSC_WEBSOCKET.CPP #####"
+	$cc $debug $options $constants $mongoose_defines -c gsc_websocket.cpp -o objects_$1/gsc_websocket.opp
+
+	echo "##### COMPILE $1 GSC_EXTRA.CPP #####"
+	$cc $debug $options $constants -c gsc_extra.cpp -o objects_$1/gsc_extra.opp
+fi
+
 if [ "$(< config.hpp grep '#define COMPILE_BSP' | grep -o '[0-9]')" == "1" ]; then
 	echo "##### COMPILE $1 BSP.CPP #####"
 	$cc $debug $options $constants -c bsp.cpp -o objects_"$1"/bsp.opp

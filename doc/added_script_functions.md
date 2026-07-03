@@ -173,6 +173,10 @@
   * `setSavePersist(<save persistent>)`
   * `setWeaponRaiseTime(<weapon name>, <raise time>)`
   * `toHex(<number>)`
+  * `httpFetch(<url>, <method>, <data>, <headers>, <timeout ms>, <onDone>, <onError>)`
+  * `webSocketConnect(<url>, <headers>, <onConnect>, <onMessage>, <onClose>, <onError>, [<reconnectDelayMs>], [<pingIntervalMs>])`
+  * `webSocketSendText(<connectionId>, <message>)`
+  * `webSocketClose(<connectionId>)`
 
 🔀 New script code callback functions:
   * `CodeCallback_EntityEvent`
