@@ -4317,6 +4317,7 @@ typedef struct customPlayerState_s
 	float proneStepSize;
 	qboolean downloadTimedOut;
 	int holdingDownWeapon;
+	int stickyFollowTarget; // g_stickySpectate mode 1: client slot to re-follow on that player's respawn, or -1 for none
 } customPlayerState_t;
 
 typedef struct callback_s

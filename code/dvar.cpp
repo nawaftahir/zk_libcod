@@ -110,6 +110,7 @@ dvar_t *g_sendEmtpyOffhandEvents;
 dvar_t *g_spawnMapTurrets;
 dvar_t *g_spawnMapWeapons;
 dvar_t *g_spectateBots;
+dvar_t *g_stickySpectate;
 dvar_t *g_triggerMode;
 dvar_t *g_turretMissingTagTerminalError;
 dvar_t *jump_bounceEnable;
@@ -294,6 +295,7 @@ void hook_Com_Printf_in_Com_Init_Try_Block_Function(const char *format, ...)
 	g_triggerMode = Dvar_RegisterInt("g_triggerMode", 1, 0, 2, DVAR_ARCHIVE);
 	g_turretMissingTagTerminalError = Dvar_RegisterBool("g_turretMissingTagTerminalError", qtrue, DVAR_ARCHIVE);
 	g_spectateBots = Dvar_RegisterBool("g_spectateBots", qtrue, DVAR_ARCHIVE);
+	g_stickySpectate = Dvar_RegisterInt("g_stickySpectate", 0, 0, 2, DVAR_ARCHIVE); // 0 off, 1 sticky (re-follow on respawn), 2 follow next player on death
 	loc_loadLocalizedMods = Dvar_RegisterBool("loc_loadLocalizedMods", qfalse, DVAR_ARCHIVE);
 	logErrors = Dvar_RegisterBool("logErrors", qfalse, DVAR_ARCHIVE);
 	net_noFragmentationDelay = Dvar_RegisterBool("net_noFragmentationDelay", qfalse, DVAR_ARCHIVE);

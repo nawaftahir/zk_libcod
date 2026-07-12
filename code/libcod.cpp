@@ -119,6 +119,7 @@ extern dvar_t *g_sendEmtpyOffhandEvents;
 extern dvar_t *g_spawnMapTurrets;
 extern dvar_t *g_spawnMapWeapons;
 extern dvar_t *g_spectateBots;
+extern dvar_t *g_stickySpectate;
 extern dvar_t *g_triggerMode;
 extern dvar_t *g_turretMissingTagTerminalError;
 extern dvar_t *jump_bounceEnable;
@@ -2238,6 +2239,16 @@ void custom_SV_DropClient(client_t *drop, const char *reason)
 		customPlayerState[i].talkerIcons[drop - svs.clients] = 0;
 	/* New code end */
 
+	/* New code start: g_stickySpectate - forget this slot as target/watcher */
+	{
+		int dropNum = drop - svs.clients;
+		customPlayerState[dropNum].stickyFollowTarget = -1;
+		for ( i = 0; i < sv_maxclients->current.integer; i++ )
+			if ( customPlayerState[i].stickyFollowTarget == dropNum )
+				customPlayerState[i].stickyFollowTarget = -1;
+	}
+	/* New code end */
+
 	/* New code start: Possible extra functionality to call before client drop/kick */
 	if ( extra_SV_DropClient_Before )
 		extra_SV_DropClient_Before(drop, reason);
@@ -4053,6 +4064,7 @@ void custom_SV_SendClientGameState(client_t *client)
 	customPlayerState[id].fireRangeScale = 1.0;
 	customPlayerState[id].turretSpreadScale = 1.0;
 	customPlayerState[id].weaponSpreadScale = 1.0;
+	customPlayerState[id].stickyFollowTarget = -1; // g_stickySpectate: -1 = not following anyone
 	customPlayerState[id].droppingBulletDrag = 0.01; // 20% drag per second @ 20 server FPS
 	customPlayerState[id].droppingBulletVelocity = 31500.0; // About 800 m/s
 
@@ -6372,6 +6384,9 @@ void G_TracePoint(trace_t *results, const float *start, const float *mins, const
 	*/
 }
 
+// g_stickySpectate mode 1 poll, defined further below in the spectator section.
+static void stickySpectate_pollRespawns(void);
+
 void custom_G_RunFrame(int levelTime)
 {
 	int i, j;
@@ -6582,6 +6597,11 @@ void custom_G_RunFrame(int levelTime)
 	hook_G_RunFrame->unhook();
 	G_RunFrame(levelTime);
 	hook_G_RunFrame->hook();
+
+	/* New code start: g_stickySpectate mode 1 - re-follow pinned watchers on respawn */
+	if ( g_stickySpectate->current.integer == 1 )
+		stickySpectate_pollRespawns();
+	/* New code end */
 
 	/* New code start: Possible extra functionality to call after each server frame */
 	if ( extra_G_RunFrame_After )
@@ -7713,6 +7733,94 @@ void custom_PlayerCmd_ClonePlayer(scr_entref_t entref)
 	hook_PlayerCmd_ClonePlayer->hook();
 }
 
+/*
+g_stickySpectate - keep a spectator on his target when that player dies.
+
+Stock, SpectatorClientEndFrame (0x080F41C2) re-validates the followed client each
+frame via SV_GetArchivedClientInfo; once the target dies his archived snapshot has
+no valid playerState, the lookup fails and it falls through to StopFollowing
+(0x080FF252), ejecting the viewer to free-cam.
+
+  mode 1 "sticky"      - remember the target (customPlayerState.stickyFollowTarget)
+                         and re-follow him on respawn (brief free-cam while dead).
+  mode 2 "follow next" - advance the viewer to the next player on death.
+
+Hooks (all gated on g_stickySpectate): custom_player_die (0x0810175A) captures/
+advances each watcher (modes 1/2); custom_G_RunFrame (0x0810A13A) polls once per frame
+and re-follows a pinned watcher when his target respawns (mode 1);
+custom_Cmd_FollowCycle_f (0x080FF4AC) cancels a pending re-attach on manual cycle;
+DropClient/SendClientGameState handle slot cleanup and the -1 default.
+*/
+
+// Forward decl so custom_player_die (mode 2) can advance a spectator (defined at 0x080FF4AC hook).
+int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir);
+
+// Mode 1: polled once per frame from custom_G_RunFrame. Re-attaches each pinned
+// watcher as soon as his target respawns, and drops the pin if the watcher left
+// spectate / took manual control or the target left the game. Polling avoids a
+// ClientSpawn hook (respawn re-enters through the normal spawn path). Cheap: it is
+// only called in mode 1 and most stickyFollowTarget slots are -1.
+static void stickySpectate_pollRespawns(void)
+{
+	int i;
+
+	for ( i = 0; i < level.maxclients; ++i )
+	{
+		int targetSlot = customPlayerState[i].stickyFollowTarget;
+		gclient_t *spec;
+		gclient_t *target;
+
+		if ( targetSlot < 0 )
+			continue;
+
+		spec = &level.clients[i];
+
+		// Drop the pin only if the watcher stopped being a free spectator or cycled to a
+		// DIFFERENT player. Right after the target dies the watcher usually still points
+		// at him (spectatorClient == targetSlot) until the engine ejects to free-cam
+		// (spectatorClient == -1) - neither is a manual move, so both must keep the pin.
+		if ( spec->sess.connected != CON_CONNECTED
+		     || spec->sess.sessionState != STATE_SPECTATOR
+		     || spec->sess.forceSpectatorClient >= 0
+		     || ( spec->spectatorClient >= 0 && spec->spectatorClient != targetSlot ) )
+		{
+			customPlayerState[i].stickyFollowTarget = -1;
+			continue;
+		}
+
+		target = g_entities[targetSlot].client;
+
+		// Give up only if the target truly left the game: disconnected or on the spectator
+		// team. A dead/killcam player reads sessionState STATE_SPECTATOR exactly like a real
+		// spectator, so team - not sessionState - is the reliable "still in play" signal.
+		if ( !target
+		     || target->sess.connected != CON_CONNECTED
+		     || ( target->sess.cs.team != TEAM_AXIS && target->sess.cs.team != TEAM_ALLIES ) )
+		{
+			customPlayerState[i].stickyFollowTarget = -1;
+			continue;
+		}
+
+		// On a playing team but not yet alive (dead / in his killcam): keep waiting.
+		if ( target->ps.pm_type != PM_NORMAL && target->ps.pm_type != PM_NORMAL_LINKED )
+			continue;
+
+		// Target is alive again: re-follow if still permitted (same access checks as
+		// Cmd_FollowCycle_f: scr_spectateenemy/freelook -> noSpectate, bots,
+		// notAllowingSpectators), then clear the pin.
+		if ( G_ClientCanSpectateTeam(spec, (team_t)target->sess.cs.team)
+		     && (!extra_G_ClientCanSpectateClient || extra_G_ClientCanSpectateClient(spec, &svs.clients[targetSlot]))
+		     && !customPlayerState[targetSlot].notAllowingSpectators
+		     && !(svs.clients[targetSlot].bIsTestClient && !g_spectateBots->current.boolean) )
+		{
+			spec->spectatorClient = targetSlot;
+			spec->sess.sessionState = STATE_SPECTATOR;
+		}
+
+		customPlayerState[i].stickyFollowTarget = -1;
+	}
+}
+
 void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, meansOfDeath_t meansOfDeath, int iWeapon, const float *vDir, hitLocation_t hitLoc, int psTimeOffset)
 {
 	pmtype_t type;
@@ -7792,6 +7900,19 @@ void custom_player_die(gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 			     && client->sess.sessionState == STATE_SPECTATOR
 			     && client->spectatorClient == self->s.number )
 			{
+				/* New code start: g_stickySpectate */
+				if ( g_stickySpectate->current.integer == 1 )
+				{
+					// Sticky: remember the target so we can re-attach on his respawn.
+					customPlayerState[i].stickyFollowTarget = self->s.number;
+				}
+				else if ( g_stickySpectate->current.integer == 2 )
+				{
+					// Follow-next: immediately advance to the next spectatable player.
+					custom_Cmd_FollowCycle_f(&g_entities[i], 1);
+				}
+				/* New code end */
+
 				Cmd_Score_f(&g_entities[i]);
 			}
 		}
@@ -10499,6 +10620,9 @@ int custom_Cmd_FollowCycle_f(gentity_t *ent, int dir)
 
 	if ( ent->client->sess.forceSpectatorClient >= 0 )
 		return 0;
+
+	// g_stickySpectate: taking manual control cancels any pending sticky re-attach.
+	customPlayerState[ent->s.number].stickyFollowTarget = -1;
 
 	clientNum = ent->client->spectatorClient;
 

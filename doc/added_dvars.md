@@ -123,6 +123,12 @@
     * Type: Boolean
     * Default: True
     * Effect: Toggle the ability to spectate bots. Alternatively or in addition, the `setAllowSpectators` script method can be used on a per-player basis.
+  * `g_stickySpectate`
+    * Type: Integer
+    * Default: 0
+    * Min. Value: 0
+    * Max. Value: 2
+    * Effect: Controls what happens to a spectator who is first-person following a player when that player dies. Stock, the engine ejects the spectator to free-cam. Possible values: `0`: Stock behavior (disabled). `1`: Sticky - remember the target and re-follow the same player when he respawns (a brief free-cam while he is dead; the follow snaps back the instant he respawns). `2`: Follow next - immediately advance the spectator to the next spectatable player on death. Spectate-permission checks (see `g_spectateBots`, `setAllowSpectators`, and `scr_spectateenemy`) are respected in all modes.
   * `g_triggerMode`
     * Type: Integer
     * Default: 1
