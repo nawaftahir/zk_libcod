@@ -6372,6 +6372,55 @@ void G_TracePoint(trace_t *results, const float *start, const float *mins, const
 	*/
 }
 
+// Real-voice routing dvars, resolved lazily on first talk.
+static dvar_t *voice_global = NULL;
+static dvar_t *voice_deadChat = NULL;
+static dvar_t *voice_localEcho = NULL;
+
+// Would a voice packet from talkerNum actually be delivered to listenerNum? Mirrors
+// the engine's per-recipient filter in G_BroadcastVoice, so a custom audio stream
+// pauses for a listener only when real voice would truly reach that listener rather
+// than whenever anyone anywhere is talking.
+// CoD2rev g_client_mp.cpp:9-78:
+// https://github.com/voron00/CoD2rev_Server/blob/abf692f/src/game/g_client_mp.cpp#L9-L78
+static qboolean Voice_ListenerWouldHearTalker(int listenerNum, int talkerNum)
+{
+	gentity_t *listener = &g_entities[listenerNum];
+	gentity_t *talker = &g_entities[talkerNum];
+
+	if ( listener->client == NULL || talker->client == NULL )
+		return qfalse;
+
+	// Team gate: team-only unless voice_global; a TEAM_FREE talker is always global.
+	if ( voice_global == NULL || !voice_global->current.boolean )
+	{
+		if ( !OnSameTeam(talker, listener) && talker->client->sess.cs.team != TEAM_FREE )
+			return qfalse;
+	}
+
+	// Alive/dead separation unless voice_deadChat, and only across the dead boundary.
+	if ( listener->client->sess.sessionState != talker->client->sess.sessionState )
+	{
+		if ( listener->client->sess.sessionState != STATE_DEAD
+		  && talker->client->sess.sessionState != STATE_DEAD )
+			return qfalse;
+		if ( voice_deadChat == NULL || !voice_deadChat->current.boolean )
+			return qfalse;
+	}
+
+	// Self-echo only with voice_localEcho.
+	if ( talkerNum == listenerNum && ( voice_localEcho == NULL || !voice_localEcho->current.boolean ) )
+		return qfalse;
+
+	// Listener muted this talker, or the listener is not receiving voice (cl_voice 0).
+	if ( SV_ClientHasClientMuted(listenerNum, talkerNum) )
+		return qfalse;
+	if ( !svs.clients[listenerNum].sendVoice )
+		return qfalse;
+
+	return qtrue;
+}
+
 void custom_G_RunFrame(int levelTime)
 {
 	int i, j;
@@ -6497,23 +6546,31 @@ void custom_G_RunFrame(int levelTime)
 		voiceFrameDelta = 50; // first frame / map change / hitch: assume one 20 fps frame
 	float voicePacketsThisFrame = VOICE_PACKETS_PER_SECOND * voiceFrameDelta / 1000.0f;
 
-	qboolean aPlayerIsTalking = qfalse;
+	// Collect the players currently talking on real voice, then (below) pause each
+	// listener's custom stream only if a talker THAT LISTENER would actually hear is
+	// active, rather than a single global gate that paused every listener whenever
+	// anyone talked. Uses the same per-recipient routing the engine applies to voice.
+	int talkers[MAX_CLIENTS];
+	int numTalkers = 0;
 
 	if ( sv_voice->current.boolean )
 	{
+		if ( voice_global == NULL ) // resolve routing dvars once (game-registered by first talk)
+		{
+			voice_global = Dvar_FindVar("voice_global");
+			voice_deadChat = Dvar_FindVar("voice_deadChat");
+			voice_localEcho = Dvar_FindVar("voice_localEcho");
+		}
+
 		gclient = level.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, gclient++ )
 		{
 			durationSinceLastTalk = level.time - gclient->lastVoiceTime;
 			if ( durationSinceLastTalk >= 0 && g_voiceChatTalkingDuration->current.integer > durationSinceLastTalk )
-			{
-				aPlayerIsTalking = qtrue;
-				break;
-			}
+				talkers[numTalkers++] = i;
 		}
 	}
 
-	if ( !aPlayerIsTalking ) // TODO: Use SV_ClientHasClientMuted() here to only pause if a non-muted player talks
 	{
 		client = svs.clients;
 		for ( i = 0; i < sv_maxclients->current.integer; i++, client++ )
@@ -6523,6 +6580,21 @@ void custom_G_RunFrame(int levelTime)
 
 			if ( customPlayerState[i].currentSoundIndex )
 			{
+				// Pause this listener's stream only if a talker it would actually
+				// hear is currently talking (leaves pendingVoiceDataFrames frozen,
+				// so playback resumes in place once talking stops).
+				qboolean voicePaused = qfalse;
+				for ( int t = 0; t < numTalkers; t++ )
+				{
+					if ( Voice_ListenerWouldHearTalker(i, talkers[t]) )
+					{
+						voicePaused = qtrue;
+						break;
+					}
+				}
+				if ( voicePaused )
+					continue;
+
 				customPlayerState[i].pendingVoiceDataFrames += voicePacketsThisFrame; // frame-rate independent; see VOICE_PACKETS_PER_SECOND
 				VoicePacket_t *voicePacket;
 
