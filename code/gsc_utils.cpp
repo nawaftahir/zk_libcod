@@ -4,8 +4,7 @@
 #include <speex/speex.h>
 #include <pthread.h>
 
-extern loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
-extern int loadSoundFileResultsIndex;
+extern loadSoundFileResultNode_t *loadSoundFileResultsHead;
 extern dvar_t *fs_debug;
 extern dvar_t *fs_homepath;
 
@@ -1744,22 +1743,27 @@ void * Encode_Async(void *newtask)
 		result = ENCODER_FILE_NOT_FOUND;
 	}
 
-	if ( Scr_IsSystemActive() )
-	{
-		Sys_EnterCriticalSection(CRITSECT_LOAD_SOUND_FILE);
-		if ( loadSoundFileResultsIndex < MAX_THREAD_RESULTS_BUFFER )
-		{
-			loadSoundFileResults[loadSoundFileResultsIndex].result = result;
-			loadSoundFileResults[loadSoundFileResultsIndex].soundIndex = task->soundIndex;
-			loadSoundFileResults[loadSoundFileResultsIndex].callback = task->callback;
-			loadSoundFileResults[loadSoundFileResultsIndex].levelId = task->levelId;
-			loadSoundFileResultsIndex++;
-		}
-		/* No message on error excess here since that might introduce another
-		 concurrency issue. Instead, we warn in the main thread if the buffer
-		 is full */
-		Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
-	}
+	/* Always enqueue the result. Do NOT gate on Scr_IsSystemActive() here: that
+	 was an unsynchronized cross-thread read of script state from the worker, and
+	 it silently dropped the callback whenever an encode finished while the script
+	 system was momentarily inactive (e.g. during a map change). The main-thread
+	 drain runs only while the script system is active and discards any result
+	 whose levelId no longer matches the current level, so enqueueing
+	 unconditionally is safe and guarantees the callback is delivered exactly once
+	 (unless the level is torn down first).
+
+	 Build the node OUTSIDE the lock so the critical section only covers the
+	 list link, keeping the worker's hold as short as possible. */
+	loadSoundFileResultNode_t *node = new loadSoundFileResultNode_t;
+	node->data.result = result;
+	node->data.soundIndex = task->soundIndex;
+	node->data.callback = task->callback;
+	node->data.levelId = task->levelId;
+
+	Sys_EnterCriticalSection(CRITSECT_LOAD_SOUND_FILE);
+	node->next = loadSoundFileResultsHead;
+	loadSoundFileResultsHead = node;
+	Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 
 	// Free task object
 	Encode_FreeTask(task);
@@ -1940,10 +1944,11 @@ void gsc_utils_loadsoundfile()
 
 	if ( detach != 0 )
 	{
-		// Do not free the task here since the thread was created successfully
-		stackError("gsc_utils_loadsoundfile() error %d detaching encoder async handler thread", detach);
-		stackPushUndefined();
-		return;
+		/* The thread was created successfully and will run to completion and
+		 enqueue its result, so return the sound index like a normal success
+		 (not undefined) to keep the one-call / one-callback contract. An
+		 undetached thread is only a minor resource leak at process exit. */
+		Com_Printf("WARNING: gsc_utils_loadsoundfile() error %d detaching encoder thread; the callback will still fire\n", detach);
 	}
 
 	stackPushInt(soundIndex);

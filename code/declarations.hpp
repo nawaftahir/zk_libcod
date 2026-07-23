@@ -4173,6 +4173,15 @@ typedef struct
 	unsigned int levelId;
 } loadSoundFileResult_t;
 
+// Unbounded singly-linked queue of pending encoder results (worker -> main).
+// A list rather than a fixed buffer so a completion is never dropped; the
+// main-thread drain frees every node, so a map change cannot leak.
+typedef struct loadSoundFileResultNode_s
+{
+	loadSoundFileResult_t data;
+	struct loadSoundFileResultNode_s *next;
+} loadSoundFileResultNode_t;
+
 #endif
 
 typedef enum

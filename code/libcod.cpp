@@ -382,8 +382,7 @@ int scr_notify_index = 0;
 
 // Data storage for multi-threaded sound encoding and realtime sound streaming
 #if COMPILE_CUSTOM_VOICE == 1
-loadSoundFileResult_t loadSoundFileResults[MAX_THREAD_RESULTS_BUFFER];
-int loadSoundFileResultsIndex = 0;
+loadSoundFileResultNode_t *loadSoundFileResultsHead = NULL;
 int currentMaxSoundIndex = 0;
 VoicePacket_t voiceDataStore[MAX_CUSTOMSOUNDS][MAX_STOREDVOICEPACKETS];
 #endif
@@ -6496,33 +6495,40 @@ void custom_G_RunFrame(int levelTime)
 
 #if COMPILE_CUSTOM_VOICE == 1
 	/* New code start: Try process results from Speex encoder tasks */
-	if ( Scr_IsSystemActive() && loadSoundFileResultsIndex > 0 )
+	if ( Scr_IsSystemActive() && loadSoundFileResultsHead != NULL )
 	{
 		if ( Sys_TryEnterCriticalSection(CRITSECT_LOAD_SOUND_FILE) == 0 )
 		{
-			if ( loadSoundFileResultsIndex == MAX_THREAD_RESULTS_BUFFER )
+			/* Detach the whole queue under the lock, then release it before
+			 executing callbacks. Scr_ExecThread runs script code, which must not
+			 hold the encoder lock (the worker would block); once detached, the
+			 list is owned solely by this (main) thread. */
+			loadSoundFileResultNode_t *node = loadSoundFileResultsHead;
+			loadSoundFileResultsHead = NULL;
+			Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
+
+			while ( node != NULL )
 			{
-				Com_Printf("WARNING: LoadSoundFile results buffer full\n");
-			}
-			for ( i = 0; i < loadSoundFileResultsIndex; i++ )
-			{
-				/* Do not execute the callback if the levelId changed, because
-				 it means that the scripts were recompiled, thus invalidating
-				 the saved callback reference */
-				if ( scrVarPub.levelId == loadSoundFileResults[i].levelId )
+				loadSoundFileResultNode_t *nextNode = node->next;
+
+				/* Skip the callback if the levelId changed (scripts recompiled on
+				 map change), which invalidates the saved callback reference -- but
+				 still free the node so a map change never leaks. */
+				if ( scrVarPub.levelId == node->data.levelId )
 				{
-					stackPushInt(loadSoundFileResults[i].result);
-					stackPushInt(loadSoundFileResults[i].soundIndex);
-					short ret = Scr_ExecThread(loadSoundFileResults[i].callback, 2);
+					stackPushInt(node->data.result);
+					stackPushInt(node->data.soundIndex);
+					short ret = Scr_ExecThread(node->data.callback, 2);
 					Scr_FreeThread(ret);
 				}
 				else
 				{
 					Com_Printf("WARNING: LoadSoundFile result from previous map discarded\n");
 				}
+
+				delete node;
+				node = nextNode;
 			}
-			loadSoundFileResultsIndex = 0;
-			Sys_LeaveCriticalSection(CRITSECT_LOAD_SOUND_FILE);
 		}
 	}
 	/* New code end */
