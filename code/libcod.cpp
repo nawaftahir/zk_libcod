@@ -6598,6 +6598,12 @@ void custom_G_RunFrame(int levelTime)
 				customPlayerState[i].pendingVoiceDataFrames += voicePacketsThisFrame; // frame-rate independent; see VOICE_PACKETS_PER_SECOND
 				VoicePacket_t *voicePacket;
 
+				// Listeners who muted the source or disabled cl_voice discard these
+				// packets client-side anyway, so skip queueing to them and save the
+				// wire traffic. The cursor still advances below, so unmuting mid stream
+				// rejoins at the live position (matches the documented behaviour).
+				qboolean skipQueue = SV_ClientHasClientMuted(i, customPlayerState[i].currentSoundTalker) || !svs.clients[i].sendVoice;
+
 				for ( ; customPlayerState[i].pendingVoiceDataFrames > 1.0 && customPlayerState[i].sentVoiceDataIndex < MAX_STOREDVOICEPACKETS; customPlayerState[i].sentVoiceDataIndex++, customPlayerState[i].pendingVoiceDataFrames -= 1.0 )
 				{
 					voicePacket = &voiceDataStore[customPlayerState[i].currentSoundIndex - 1][customPlayerState[i].sentVoiceDataIndex];
@@ -6611,8 +6617,11 @@ void custom_G_RunFrame(int levelTime)
 							Scr_Notify(&g_entities[i], custom_scr_const.sound_file_done, 0);
 						break;
 					}
-					voicePacket->talkerNum = customPlayerState[i].currentSoundTalker;
-					SV_QueueVoicePacket(voicePacket->talkerNum, i, voicePacket);
+					if ( !skipQueue )
+					{
+						voicePacket->talkerNum = customPlayerState[i].currentSoundTalker;
+						SV_QueueVoicePacket(voicePacket->talkerNum, i, voicePacket);
+					}
 				}
 			}
 		}
