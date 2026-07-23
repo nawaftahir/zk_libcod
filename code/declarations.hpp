@@ -93,7 +93,7 @@
 #define MAX_VOICEFRAMESIZE          160
 #define MAX_VOICEPACKETDATALEN      256
 #define MAX_VOICEPACKETS            40
-#define MAX_VOICEPACKETSPERFRAME    2.56
+#define VOICE_PACKETS_PER_SECOND    51.2f   // 8192 Hz / 160-sample speex frames = 51.2 pkt/s; frame-rate independent
 #define MAX_ZPATH                   256
 
 #define ENTITYNUM_NONE      ( MAX_GENTITIES - 1 )
@@ -4153,7 +4153,7 @@ typedef struct scr_notify_s
 #if COMPILE_CUSTOM_VOICE == 1
 
 #define MAX_CUSTOMSOUNDDURATION 10                              // Minutes
-#define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // MAX_VOICEPACKETSPERFRAME * 20 * 60
+#define MAX_STOREDVOICEPACKETS (MAX_CUSTOMSOUNDDURATION * 3072) // VOICE_PACKETS_PER_SECOND * 60
 #define MAX_CUSTOMSOUNDS 64                                     // Consider ~8MB of memory usage per 10-minute song
 #define MAX_THREAD_RESULTS_BUFFER 64
 

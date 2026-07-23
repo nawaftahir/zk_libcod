@@ -6479,6 +6479,24 @@ void custom_G_RunFrame(int levelTime)
 	/* New code end */
 
 	/* New code start: Process custom voice data queue */
+	// Frame-rate independent cadence (fixes sv_fps != 20 distortion). Speex frames
+	// are 160 samples @ 8192 Hz = 19.53 ms, so the client decoder consumes exactly
+	// 51.2 packets of audio per real second; the production rate must track real
+	// time, not the server frame rate. The engine flushes queued voice per client
+	// SNAPSHOT -- rate-gated by nextSnapshotTime (the "not time yet" continue), NOT
+	// once per G_RunFrame. See CoD2rev SV_SendClientMessages, the snapshot+voice
+	// flush block sv_snapshot_mp.cpp:934-976:
+	// https://github.com/voron00/CoD2rev_Server/blob/abf692f/src/server/sv_snapshot_mp.cpp#L934-L976
+	// So crediting by elapsed ms holds 51.2 pkt/s at any sv_fps and any client snap
+	// rate, and avoids overrunning the 40-slot queue (MAX_VOICE_PACKETS, dropped on
+	// overflow). The old constant 2.56 = 51.2/20 was correct only at sv_fps 20.
+	static int voiceLastFrameTime = 0;
+	int voiceFrameDelta = level.time - voiceLastFrameTime;
+	voiceLastFrameTime = level.time;
+	if ( voiceFrameDelta < 1 || voiceFrameDelta > 1000 )
+		voiceFrameDelta = 50; // first frame / map change / hitch: assume one 20 fps frame
+	float voicePacketsThisFrame = VOICE_PACKETS_PER_SECOND * voiceFrameDelta / 1000.0f;
+
 	qboolean aPlayerIsTalking = qfalse;
 
 	if ( sv_voice->current.boolean )
@@ -6505,7 +6523,7 @@ void custom_G_RunFrame(int levelTime)
 
 			if ( customPlayerState[i].currentSoundIndex )
 			{
-				customPlayerState[i].pendingVoiceDataFrames += MAX_VOICEPACKETSPERFRAME; // 51.2 packets per second @ 20 server fps
+				customPlayerState[i].pendingVoiceDataFrames += voicePacketsThisFrame; // frame-rate independent; see VOICE_PACKETS_PER_SECOND
 				VoicePacket_t *voicePacket;
 
 				for ( ; customPlayerState[i].pendingVoiceDataFrames > 1.0 && customPlayerState[i].sentVoiceDataIndex < MAX_STOREDVOICEPACKETS; customPlayerState[i].sentVoiceDataIndex++, customPlayerState[i].pendingVoiceDataFrames -= 1.0 )

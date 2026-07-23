@@ -1807,7 +1807,7 @@ void gsc_utils_getsoundfileduration()
 			{
 				fclose(file);
 				size -= size % (sizeof(short) * MAX_VOICEFRAMESIZE);
-				float duration = size / ((((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME) * (sizeof(short) * MAX_VOICEFRAMESIZE));
+				float duration = size / (VOICE_PACKETS_PER_SECOND * (sizeof(short) * MAX_VOICEFRAMESIZE));
 				if ( overrideLimit && duration > (60 * MAX_CUSTOMSOUNDDURATION) )
 					duration = 60 * MAX_CUSTOMSOUNDDURATION;
 

@@ -3935,7 +3935,7 @@ void gsc_player_getremainingsoundfileduration(scr_entref_t ref)
 		if ( remainingPackets <= 0 )
 			stackPushFloat(0.0);
 		else
-			stackPushFloat(remainingPackets / (((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME));
+			stackPushFloat(remainingPackets / VOICE_PACKETS_PER_SECOND);
 	}
 	else
 	{
@@ -4032,7 +4032,7 @@ void gsc_player_playsoundfile(scr_entref_t ref)
 		return;
 	}
 
-	int packetOffset = (int)(offset * (((1.0 / FRAMETIME) * 1000) * MAX_VOICEPACKETSPERFRAME));
+	int packetOffset = (int)(offset * VOICE_PACKETS_PER_SECOND);
 	if ( packetOffset >= MAX_STOREDVOICEPACKETS )
 	{
 		stackError("gsc_player_playsoundfile() too large offset for sound with index %d", soundIndex);
