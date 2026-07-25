@@ -58,6 +58,7 @@
   * `<player> getHWID()`
   * `<player> getInactivityTime()`
   * `<player> getNumberOfEntsInSnapshot()`
+  * `<player> getPlayerNameMode()`
   * `<player> getPlayerstateFlags()`
   * `<player> getPlayerWeaponFireTime(<weapon name|id>)`
   * `<player> getPlayerWeaponMeleeTime(<weapon name|id>)`
@@ -132,6 +133,7 @@
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<ingame value>, [<status value>])`
+  * `<player> setPlayerNameMode(<"auto"|"manual"|"default">)`
   * `<player> setPlayerWeaponFireTime(<weapon name|id>, <fire time>)`
   * `<player> setPlayerWeaponMeleeTime(<weapon name|id>, <melee time>)`
   * `<player> setPlayerWeaponReloadTime(<weapon name|id>, <reload time>)`
