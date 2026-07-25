@@ -62,6 +62,9 @@
   * `<player> getPlayerWeaponReloadTime(<weapon name|id>)`
   * `<player> getPlayerWeaponReloadEmptyTime(<weapon name|id>)`
   * `<player> getPlayerWeaponFuseTime(<weapon name|id>)`
+  * `<player> getPlayerWeaponDamage(<weapon name|id>)`
+  * `<player> getPlayerWeaponMeleeDamage(<weapon name|id>)`
+  * `<player> getPlayerWeaponMoveSpeedScale(<weapon name|id>)`
   * `<player> getProtocol()`
   * `<player> getProtocolString()`
   * `<player> getRemainingSoundFileDuration()`
@@ -131,6 +134,9 @@
   * `<player> setPlayerWeaponReloadTime(<weapon name|id>, <reload time>)`
   * `<player> setPlayerWeaponReloadEmptyTime(<weapon name|id>, <reload empty time>)`
   * `<player> setPlayerWeaponFuseTime(<weapon name|id>, <fuse time>)`
+  * `<player> setPlayerWeaponDamage(<weapon name|id>, <damage>)`
+  * `<player> setPlayerWeaponMeleeDamage(<weapon name|id>, <damage>)`
+  * `<player> setPlayerWeaponMoveSpeedScale(<weapon name|id>, <scale>)`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`
@@ -164,6 +170,10 @@
   * `getSoundAliasesFromFile(<filename>)`
   * `getSoundFileDuration(<file path>)`
   * `getWeaponRaiseTime(<weapon name>)`
+  * `getWeaponMeleeDamage(<weapon name>)`
+  * `setWeaponMeleeDamage(<weapon name>, <damage>)`
+  * `getWeaponMoveSpeedScale(<weapon name>)`
+  * `setWeaponMoveSpeedScale(<weapon name>, <scale>)`
   * `isSemiAutoWeapon(<weapon name>)`
   * `json_async_done()`
   * `json_async_result(<jobId>)`
