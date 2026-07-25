@@ -57,6 +57,7 @@
   * `<player> getInactivityTime()`
   * `<player> getNumberOfEntsInSnapshot()`
   * `<player> getPlayerstateFlags()`
+  * `<player> getPlayerWeaponFireTime(<weapon name|id>)`
   * `<player> getProtocol()`
   * `<player> getProtocolString()`
   * `<player> getRemainingSoundFileDuration()`
@@ -121,6 +122,7 @@
   * `<player> setTurretSpreadScale(<scale>)`
   * `<player> setWeaponSpreadScale(<scale>)`
   * `<player> setPing(<ingame value>, [<status value>])`
+  * `<player> setPlayerWeaponFireTime(<weapon name|id>, <fire time>)`
   * `<player> stopSoundFile()`
   * `<player> stopUseTurret()`
   * `<player> unmuteClient(<player id>)`
