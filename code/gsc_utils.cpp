@@ -1097,6 +1097,72 @@ void gsc_utils_sha256()
 	stackPushString(output);
 }
 
+// Returns a copy of source with every occurrence of search replaced by replacement (case-sensitive,
+// non-overlapping, left to right). An empty search string is a no-op. Output is capped to fit
+// MAX_STRINGLENGTH.
+void gsc_utils_strreplace()
+{
+	char *source, *search, *replacement;
+	char out[MAX_STRINGLENGTH];
+	int srcLen, searchLen, replaceLen, si, oi;
+
+	if ( !stackGetParams("sss", &source, &search, &replacement) )
+	{
+		stackError("gsc_utils_strreplace() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	searchLen = strlen(search);
+	if ( searchLen == 0 )
+	{
+		stackPushString(source); // nothing to search for
+		return;
+	}
+
+	srcLen = strlen(source);
+	replaceLen = strlen(replacement);
+	si = 0;
+	oi = 0;
+	while ( si < srcLen )
+	{
+		if ( si + searchLen <= srcLen && strncmp(source + si, search, searchLen) == 0 )
+		{
+			if ( oi + replaceLen >= MAX_STRINGLENGTH )
+				break;
+			memcpy(out + oi, replacement, replaceLen);
+			oi += replaceLen;
+			si += searchLen;
+		}
+		else
+		{
+			if ( oi + 1 >= MAX_STRINGLENGTH )
+				break;
+			out[oi++] = source[si++];
+		}
+	}
+
+	out[oi] = '\0';
+	stackPushString(out);
+}
+
+// Constant-time string equality: returns true if a and b are equal, always taking the same time
+// regardless of where they differ. Use when comparing secrets (password hashes, tokens) to avoid
+// leaking how much matched through timing. Wraps the engine's strcmp_constant_time.
+void gsc_utils_strcompareconstant()
+{
+	char *a, *b;
+
+	if ( !stackGetParams("ss", &a, &b) )
+	{
+		stackError("gsc_utils_strcompareconstant() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	stackPushBool( strcmp_constant_time(a, b) );
+}
+
 void gsc_utils_file_link()
 {
 	char *source, *dest;

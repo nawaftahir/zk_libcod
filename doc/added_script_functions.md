@@ -165,6 +165,8 @@
   * `stripColors(<string>)`
   * `collapseColors(<string>)`
   * `sha256(<string>, [<iterations>])`
+  * `strReplace(<source>, <search>, <replacement>)`
+  * `strCompareConstant(<a>, <b>)`
   * `isStringInt(<string>)`
   * `isStringFloat(<string>)`
   * `isStringAlpha(<string>)`
