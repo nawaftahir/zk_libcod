@@ -162,6 +162,7 @@
   * `endsWith(<string>, <suffix>)`
   * `stripColors(<string>)`
   * `collapseColors(<string>)`
+  * `sha256(<string>, [<iterations>])`
   * `isStringInt(<string>)`
   * `isStringFloat(<string>)`
   * `isStringAlpha(<string>)`
