@@ -226,6 +226,8 @@ scr_function_t scriptFunctions[] =
 	{"isStringInt", gsc_utils_isstringint, 0},
 	{"isStringFloat", gsc_utils_isstringfloat, 0},
 	{"isStringAlpha", gsc_utils_isstringalpha, 0},
+	{"stripColors", gsc_utils_stripcolors, 0},
+	{"collapseColors", gsc_utils_collapsecolors, 0},
 
 	#if ENABLE_UNSAFE == 1
 	{"file_link", gsc_utils_file_link, 0},

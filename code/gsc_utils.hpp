@@ -33,6 +33,8 @@ void gsc_utils_endswith();
 void gsc_utils_isstringint();
 void gsc_utils_isstringfloat();
 void gsc_utils_isstringalpha();
+void gsc_utils_stripcolors();
+void gsc_utils_collapsecolors();
 
 void gsc_utils_file_link();
 void gsc_utils_file_unlink();

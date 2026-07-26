@@ -160,6 +160,8 @@
   * `trim(<string>)`
   * `startsWith(<string>, <prefix>)`
   * `endsWith(<string>, <suffix>)`
+  * `stripColors(<string>)`
+  * `collapseColors(<string>)`
   * `isStringInt(<string>)`
   * `isStringFloat(<string>)`
   * `isStringAlpha(<string>)`
