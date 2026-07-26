@@ -27,6 +27,12 @@ void gsc_utils_getarraykeys();
 void gsc_utils_getascii();
 void gsc_utils_getcallstack();
 void gsc_utils_toupper();
+void gsc_utils_trim();
+void gsc_utils_startswith();
+void gsc_utils_endswith();
+void gsc_utils_isstringint();
+void gsc_utils_isstringfloat();
+void gsc_utils_isstringalpha();
 
 void gsc_utils_file_link();
 void gsc_utils_file_unlink();
