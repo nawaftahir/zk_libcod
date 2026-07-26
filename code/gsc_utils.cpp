@@ -1060,6 +1060,43 @@ void gsc_utils_collapsecolors()
 	stackPushString(buf);
 }
 
+// Returns the SHA-256 of the input as a 64-char lowercase hex string. An optional second argument
+// re-hashes the hex digest that many times (key stretching for password storage).
+void gsc_utils_sha256()
+{
+	char *input;
+	int iterations = 1;
+
+	if ( !stackGetParams("s", &input) )
+	{
+		stackError("gsc_utils_sha256() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	if ( Scr_GetNumParam() > 1 )
+	{
+		if ( !stackGetParamInt(1, &iterations) || iterations < 1 )
+		{
+			stackError("gsc_utils_sha256() iterations must be an integer >= 1");
+			stackPushUndefined();
+			return;
+		}
+	}
+
+	char output[65];
+	Sha256Hex((const uint8_t *)input, strlen(input), output);
+
+	for ( int i = 1; i < iterations; ++i )
+	{
+		char next[65];
+		Sha256Hex((const uint8_t *)output, 64, next);
+		memcpy(output, next, sizeof(next));
+	}
+
+	stackPushString(output);
+}
+
 void gsc_utils_file_link()
 {
 	char *source, *dest;
