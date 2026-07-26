@@ -996,6 +996,70 @@ void gsc_utils_isstringalpha()
 	stackPushBool(qtrue);
 }
 
+// Returns a copy of the string with all color codes removed. Uses the engine's own I_CleanStr so
+// the result matches exactly how CoD2 cleans names for comparison and display (strips ^0-^@ and
+// control characters).
+void gsc_utils_stripcolors()
+{
+	char *str;
+	char buf[MAX_STRINGLENGTH];
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_stripcolors() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	I_strncpyz(buf, str, sizeof(buf)); // copy: I_CleanStr cleans the buffer in place
+	I_CleanStr(buf);
+	stackPushString(buf);
+}
+
+// Returns a copy of the string with each run of consecutive color codes collapsed to the last one
+// (e.g. "^1^2^3name" -> "^3name"). A color code is '^' followed by a character in '0'..'@', matching
+// the engine's I_CleanStr definition. Single/standalone color codes are left untouched.
+void gsc_utils_collapsecolors()
+{
+	char *str;
+	char buf[MAX_STRINGLENGTH];
+	const char *s;
+	char *d;
+	char lastColor;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_collapsecolors() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	s = str;
+	d = buf;
+	while ( *s != '\0' && d < buf + MAX_STRINGLENGTH - 3 )
+	{
+		if ( *s == '^' && s[1] >= '0' && s[1] <= '@' )
+		{
+			lastColor = s[1];
+			s += 2;
+			while ( *s == '^' && s[1] >= '0' && s[1] <= '@' )
+			{
+				lastColor = s[1];
+				s += 2;
+			}
+			*d++ = '^';
+			*d++ = lastColor;
+		}
+		else
+		{
+			*d++ = *s++;
+		}
+	}
+	*d = '\0';
+
+	stackPushString(buf);
+}
+
 void gsc_utils_file_link()
 {
 	char *source, *dest;
