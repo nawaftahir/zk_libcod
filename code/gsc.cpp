@@ -220,6 +220,12 @@ scr_function_t scriptFunctions[] =
 	{"getAscii", gsc_utils_getascii, 0},
 	{"getCallStack", gsc_utils_getcallstack, 0},
 	{"toUpper", gsc_utils_toupper, 0},
+	{"trim", gsc_utils_trim, 0},
+	{"startsWith", gsc_utils_startswith, 0},
+	{"endsWith", gsc_utils_endswith, 0},
+	{"isStringInt", gsc_utils_isstringint, 0},
+	{"isStringFloat", gsc_utils_isstringfloat, 0},
+	{"isStringAlpha", gsc_utils_isstringalpha, 0},
 
 	#if ENABLE_UNSAFE == 1
 	{"file_link", gsc_utils_file_link, 0},
