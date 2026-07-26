@@ -157,6 +157,12 @@
   * `atan2(<y>, <x>)`
   * `ceil(<number>)`
   * `chr(<number>)`
+  * `trim(<string>)`
+  * `startsWith(<string>, <prefix>)`
+  * `endsWith(<string>, <suffix>)`
+  * `isStringInt(<string>)`
+  * `isStringFloat(<string>)`
+  * `isStringAlpha(<string>)`
   * `getCallStack()`
   * `getConfigString(<index>)`
   * `getMovers()`

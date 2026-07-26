@@ -784,6 +784,218 @@ void gsc_utils_toupper()
 	stackPushString(I_strupr(str));
 }
 
+// Returns a copy of the string with leading and trailing whitespace removed.
+void gsc_utils_trim()
+{
+	char *str;
+	char buf[MAX_STRINGLENGTH];
+	int start, end, len, outLen;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_trim() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	len = strlen(str);
+
+	start = 0;
+	while ( start < len && ( str[start] == ' ' || str[start] == '\t' || str[start] == '\n' || str[start] == '\r' ) )
+		start++;
+
+	end = len - 1;
+	while ( end >= start && ( str[end] == ' ' || str[end] == '\t' || str[end] == '\n' || str[end] == '\r' ) )
+		end--;
+
+	outLen = end - start + 1;
+	if ( outLen < 0 )
+		outLen = 0;
+	if ( outLen > MAX_STRINGLENGTH - 1 )
+		outLen = MAX_STRINGLENGTH - 1;
+
+	memcpy(buf, str + start, outLen);
+	buf[outLen] = '\0';
+
+	stackPushString(buf);
+}
+
+// Returns true if the string begins with the given prefix.
+void gsc_utils_startswith()
+{
+	char *str;
+	char *prefix;
+	int prefixLen;
+
+	if ( !stackGetParams("ss", &str, &prefix) )
+	{
+		stackError("gsc_utils_startswith() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	prefixLen = strlen(prefix);
+	if ( prefixLen > (int)strlen(str) )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	stackPushBool( strncmp(str, prefix, prefixLen) == 0 );
+}
+
+// Returns true if the string ends with the given suffix.
+void gsc_utils_endswith()
+{
+	char *str;
+	char *suffix;
+	int strLen, suffixLen;
+
+	if ( !stackGetParams("ss", &str, &suffix) )
+	{
+		stackError("gsc_utils_endswith() one or more arguments is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	strLen = strlen(str);
+	suffixLen = strlen(suffix);
+	if ( suffixLen > strLen )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	stackPushBool( strcmp(str + strLen - suffixLen, suffix) == 0 );
+}
+
+// Returns true if the string is a valid integer (optional leading sign, then digits).
+void gsc_utils_isstringint()
+{
+	char *str;
+	int i, len;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_isstringint() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	len = strlen(str);
+	if ( len == 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	i = 0;
+	if ( str[0] == '-' || str[0] == '+' )
+		i = 1;
+	if ( i == len ) // a lone sign is not a number
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	for ( ; i < len; i++ )
+	{
+		if ( str[i] < '0' || str[i] > '9' )
+		{
+			stackPushBool(qfalse);
+			return;
+		}
+	}
+
+	stackPushBool(qtrue);
+}
+
+// Returns true if the string is a valid float (optional sign, digits and at most one dot; at least
+// one digit). Note an integer string is also a valid float.
+void gsc_utils_isstringfloat()
+{
+	char *str;
+	int i, len, digits, dots;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_isstringfloat() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	len = strlen(str);
+	if ( len == 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	i = 0;
+	if ( str[0] == '-' || str[0] == '+' )
+		i = 1;
+
+	digits = 0;
+	dots = 0;
+	for ( ; i < len; i++ )
+	{
+		if ( str[i] == '.' )
+		{
+			dots++;
+			if ( dots > 1 )
+			{
+				stackPushBool(qfalse);
+				return;
+			}
+		}
+		else if ( str[i] >= '0' && str[i] <= '9' )
+		{
+			digits++;
+		}
+		else
+		{
+			stackPushBool(qfalse);
+			return;
+		}
+	}
+
+	stackPushBool( digits > 0 ? qtrue : qfalse );
+}
+
+// Returns true if the string is non-empty and contains only letters (a-z, A-Z).
+void gsc_utils_isstringalpha()
+{
+	char *str;
+	int i, len;
+	char c;
+
+	if ( !stackGetParams("s", &str) )
+	{
+		stackError("gsc_utils_isstringalpha() argument is undefined or has a wrong type");
+		stackPushUndefined();
+		return;
+	}
+
+	len = strlen(str);
+	if ( len == 0 )
+	{
+		stackPushBool(qfalse);
+		return;
+	}
+
+	for ( i = 0; i < len; i++ )
+	{
+		c = str[i];
+		if ( !( ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' ) ) )
+		{
+			stackPushBool(qfalse);
+			return;
+		}
+	}
+
+	stackPushBool(qtrue);
+}
+
 void gsc_utils_file_link()
 {
 	char *source, *dest;
