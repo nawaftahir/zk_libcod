@@ -34,5 +34,8 @@ qboolean ContainsMapCommand(const char *string);
 void Sys_AnsiColorPrint(const char *msg);
 
 qboolean IsMD5String(const char *string);
+// SHA-256 (self-contained, no OpenSSL)
+void Sha256Bytes(const uint8_t *data, size_t len, uint8_t digest[32]);
+void Sha256Hex(const uint8_t *data, size_t len, char hex[65]);
 
 #endif
