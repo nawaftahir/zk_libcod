@@ -27,7 +27,7 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns a copy of the string with each run of consecutive color codes collapsed to the last one in the run (only the last color before text takes effect anyway). Useful for normalizing names padded with redundant color codes. A color code is '^' followed by a character in the range '0' to '@'.</p>
+<p>Removes repeated color codes, keeping only the last one before the text. "^1^2^3name" becomes "^3name". The result is cut at 1023 characters.</p>
 
 </H3>
 </TR></TD></TABLE>

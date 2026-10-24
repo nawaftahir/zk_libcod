@@ -835,7 +835,6 @@ void gsc_utils_toupper()
 	stackPushString(I_strupr(str));
 }
 
-// Returns a copy of the string with leading and trailing whitespace removed.
 void gsc_utils_trim()
 {
 	char *str;
@@ -871,7 +870,6 @@ void gsc_utils_trim()
 	stackPushString(buf);
 }
 
-// Returns true if the string begins with the given prefix.
 void gsc_utils_startswith()
 {
 	char *str;
@@ -895,7 +893,6 @@ void gsc_utils_startswith()
 	stackPushBool( strncmp(str, prefix, prefixLen) == 0 );
 }
 
-// Returns true if the string ends with the given suffix.
 void gsc_utils_endswith()
 {
 	char *str;
@@ -920,7 +917,6 @@ void gsc_utils_endswith()
 	stackPushBool( strcmp(str + strLen - suffixLen, suffix) == 0 );
 }
 
-// Returns true if the string is a valid integer (optional leading sign, then digits).
 void gsc_utils_isstringint()
 {
 	char *str;
@@ -961,8 +957,6 @@ void gsc_utils_isstringint()
 	stackPushBool(qtrue);
 }
 
-// Returns true if the string is a valid float (optional sign, digits and at most one dot; at least
-// one digit). Note an integer string is also a valid float.
 void gsc_utils_isstringfloat()
 {
 	char *str;
@@ -1013,7 +1007,6 @@ void gsc_utils_isstringfloat()
 	stackPushBool( digits > 0 ? qtrue : qfalse );
 }
 
-// Returns true if the string is non-empty and contains only letters (a-z, A-Z).
 void gsc_utils_isstringalpha()
 {
 	char *str;
@@ -1047,9 +1040,6 @@ void gsc_utils_isstringalpha()
 	stackPushBool(qtrue);
 }
 
-// Returns a copy of the string with all color codes removed. Uses the engine's own I_CleanStr so
-// the result matches exactly how CoD2 cleans names for comparison and display (strips ^0-^@ and
-// control characters).
 void gsc_utils_stripcolors()
 {
 	char *str;
@@ -1067,9 +1057,6 @@ void gsc_utils_stripcolors()
 	stackPushString(buf);
 }
 
-// Returns a copy of the string with each run of consecutive color codes collapsed to the last one
-// (e.g. "^1^2^3name" -> "^3name"). A color code is '^' followed by a character in '0'..'@', matching
-// the engine's I_CleanStr definition. Single/standalone color codes are left untouched.
 void gsc_utils_collapsecolors()
 {
 	char *str;
@@ -1111,8 +1098,6 @@ void gsc_utils_collapsecolors()
 	stackPushString(buf);
 }
 
-// Returns the SHA-256 of the input as a 64-char lowercase hex string. An optional second argument
-// re-hashes the hex digest that many times (key stretching for password storage).
 void gsc_utils_sha256()
 {
 	char *input;
@@ -1127,9 +1112,9 @@ void gsc_utils_sha256()
 
 	if ( Scr_GetNumParam() > 1 )
 	{
-		if ( !stackGetParamInt(1, &iterations) || iterations < 1 )
+		if ( !stackGetParamInt(1, &iterations) || iterations < 1 || iterations > 1000 )
 		{
-			stackError("gsc_utils_sha256() iterations must be an integer >= 1");
+			stackError("gsc_utils_sha256() iterations must be an integer from 1 to 1000");
 			stackPushUndefined();
 			return;
 		}
@@ -1148,9 +1133,6 @@ void gsc_utils_sha256()
 	stackPushString(output);
 }
 
-// Returns a copy of source with every occurrence of search replaced by replacement (case-sensitive,
-// non-overlapping, left to right). An empty search string is a no-op. Output is capped to fit
-// MAX_STRINGLENGTH.
 void gsc_utils_strreplace()
 {
 	char *source, *search, *replacement;
@@ -1197,9 +1179,6 @@ void gsc_utils_strreplace()
 	stackPushString(out);
 }
 
-// Constant-time string equality: returns true if a and b are equal, always taking the same time
-// regardless of where they differ. Use when comparing secrets (password hashes, tokens) to avoid
-// leaking how much matched through timing. Wraps the engine's strcmp_constant_time.
 void gsc_utils_strcompareconstant()
 {
 	char *a, *b;

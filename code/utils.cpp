@@ -266,16 +266,6 @@ qboolean IsMD5String(const char *string)
     return qtrue;
 }
 
-/* ------------------------------------------------------------------------------------------------
- * SHA-256 as specified by NIST FIPS 180-4 (Secure Hash Standard) and RFC 6234. Self-contained,
- * constant memory, no external dependency. The round constants below are the first 32 bits of the
- * fractional parts of the cube roots of the first 64 primes; the initial state words are the first
- * 32 bits of the fractional parts of the square roots of the first 8 primes (FIPS 180-4 s5.3.3).
- * Ported from nl_squad_libcod code/utils.cpp L199-L376 @ commit e44ce11:
- * https://github.com/nl-squad/libcod/blob/e44ce1197d76cdc66ffb7cb96e6cc09f189a304f/code/utils.cpp#L199-L376
- * Known-answer test vectors: https://www.di-mgt.com.au/sha_testvectors.html
- * ---------------------------------------------------------------------------------------------- */
-
 static inline uint32_t Sha256Rotr32(uint32_t x, uint32_t n)
 {
 	return ( x >> n ) | ( x << ( 32 - n ) );

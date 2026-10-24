@@ -27,7 +27,7 @@ Module: System<BR>
 <TABLE BORDER='1' CELLSPACING='1' CELLPADDING='4' WIDTH='100%'>
 <TR><TD BGCOLOR="C0D4EE">
 <H3>
-<p>Returns the SHA-256 hash of the string as a 64-character lowercase hex string. The optional second argument re-hashes the hex digest that many times (key stretching, useful for password storage). Self-contained, no external library.</p>
+<p>Returns the SHA-256 hash of the string as 64 lowercase hex characters. With a second argument, the result is hashed again that many times in total.</p>
 
 </H3>
 </TR></TD></TABLE>
@@ -38,7 +38,7 @@ Module: System<BR>
 <H3>
 <PRE>
 sha256("abc");            // "ba7816bf...15ad"
-sha256("password", 5000); // stretched 5000 times
+sha256("password", 1000); // stretched 1000 times
 </PRE>
 </H3>
 </TR></TD></TABLE>
@@ -54,7 +54,7 @@ sha256("password", 5000); // stretched 5000 times
 <TABLE BORDER="1" CELLSPACING="1" CELLPADDING="4" WIDTH="100%">
 <TR><TD BGCOLOR="C0D4EE">
 <UL>
-<LI>2 : &lt;iterations&gt; (int, default 1) Number of times to hash (must be >= 1)</LI>
+<LI>2 : &lt;iterations&gt; (int, default 1) Number of times to hash (1 to 1000)</LI>
 </UL></TR></TD></TABLE>
 <BR>
 </BODY>
